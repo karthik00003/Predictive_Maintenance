@@ -1,0 +1,186 @@
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+}
+
+/* Container */
+.container {
+    width: 420px; /* ⭐ wider to prevent edge visibility */
+    overflow: hidden;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(15px);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    padding: 30px;
+    color: white;
+    animation: fadeIn 0.8s ease-in-out;
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 25px; /* ⭐ more space */
+}
+
+.tabs button {
+    width: 48%;
+    padding: 10px;
+    border: none;
+    background: transparent;
+    color: white;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: background 0.3s ease;
+}
+
+.tabs button:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.tabs button.active {
+    border-bottom: 2px solid white;
+}
+
+/* Sliding wrapper */
+.form-wrapper {
+    display: flex;
+    width: 100%;
+}
+
+/* Each form */
+.form {
+    width: 100%;
+    padding: 10px 20px; /* ⭐ spacing inside */
+}
+
+/* Inputs */
+.input-box {
+    margin-bottom: 18px; /* ⭐ spacing between fields */
+}
+
+.input-box input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    background: rgba(255,255,255,0.2);
+    color: white;
+    transition: background 0.3s ease;
+}
+
+.input-box input:focus {
+    background: rgba(255,255,255,0.3);
+    outline: none;
+}
+
+/* Button */
+.submit-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(90deg, #9b59b6, #6a11cb);
+    color: white;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.submit-btn:hover {
+    background: linear-gradient(90deg, #8a49a6, #5a0fc8);
+}
+
+/* Title */
+h2 {
+    text-align: center;
+    margin-bottom: 15px; /* ⭐ more space */
+}
+
+.brand {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+
+<body>
+    <div class="container">
+        <div class="brand">
+            <h1>Vehicle Predictive Maintenance</h1>
+        </div>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showForm('login')">Login</button>
+            <button class="tab-btn" onclick="showForm('signup')">Sign Up</button>
+        </div>
+        <div class="form-wrapper" id="formWrapper">
+            <!-- Login Form -->
+            <form class="form" id="loginForm" action="/login" method="POST">
+                <h2>Login</h2>
+                {% if error %}
+                <p style="color: red; text-align: center;">{{ error }}</p>
+                {% endif %}
+                <div class="input-box">
+                    <input type="text" name="username" placeholder="Username" required>
+                </div>
+                <div class="input-box">
+                    <input type="password" name="password" placeholder="Password" required>
+                </div>
+                <button type="submit" class="submit-btn">Login</button>
+            </form>
+            <!-- Signup Form -->
+            <form class="form" id="signupForm" action="/signup" method="POST" style="display: none;">
+                <h2>Sign Up</h2>
+                <div class="input-box">
+                    <input type="text" name="username" placeholder="Username" required>
+                </div>
+                <div class="input-box">
+                    <input type="password" name="password" placeholder="Password" required>
+                </div>
+                <button type="submit" class="submit-btn">Sign Up</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function showForm(formType) {
+            const loginForm = document.getElementById('loginForm');
+            const signupForm = document.getElementById('signupForm');
+            const loginBtn = document.querySelector('.tab-btn:nth-child(1)');
+            const signupBtn = document.querySelector('.tab-btn:nth-child(2)');
+
+            if (formType === 'login') {
+                loginForm.style.display = 'block';
+                signupForm.style.display = 'none';
+                loginBtn.classList.add('active');
+                signupBtn.classList.remove('active');
+            } else {
+                loginForm.style.display = 'none';
+                signupForm.style.display = 'block';
+                signupBtn.classList.add('active');
+                loginBtn.classList.remove('active');
+            }
+        }
+    </script>
+</body>
+</html>

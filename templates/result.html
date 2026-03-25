@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Prediction Result</title>
+
+<style>
+body{
+    font-family:Arial;
+    background:#f4f6f8;
+    padding:40px;
+    text-align:center;
+}
+
+.container{
+    max-width:600px;
+    margin:auto;
+    background:white;
+    padding:30px;
+    border-radius:10px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+
+.result-box{
+    margin:20px 0;
+    padding:15px;
+    border-radius:8px;
+    background:#eef4ff;
+}
+
+.back{
+    text-decoration:none;
+    display:inline-block;
+    margin-top:20px;
+    margin-right:10px;
+    color:#0d6efd;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Vehicle Health Prediction Result</h2>
+
+{% if range_pred and exact_pred %}
+
+<div class="result-box">
+    <h3>🔹 Predicted Range:</h3>
+    <h2>{{ range_pred }}</h2>
+</div>
+
+<div class="result-box">
+    <h3>🔹 Estimated Remaining KM:</h3>
+    <h2>{{ exact_pred }} kms</h2>
+</div>
+
+{% else %}
+<p>No prediction available.</p>
+{% endif %}
+
+<a href="/predict_page" class="back">← Predict Again</a>
+<a href="/home" class="back">← Back to Home</a>
+
+</div>
+
+</body>
+</html>
