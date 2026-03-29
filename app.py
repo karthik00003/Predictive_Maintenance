@@ -9,7 +9,7 @@ app.secret_key = "secret123"
 # -------------------------
 # LOAD MODEL
 # -------------------------
-reg = pickle.load(open("regressor.pkl", "rb"))
+reg = pickle.load(open("model.pkl", "rb"))
 columns = pickle.load(open("columns.pkl", "rb"))
 
 

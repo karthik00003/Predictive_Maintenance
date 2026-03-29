@@ -2,14 +2,14 @@ import pandas as pd
 import pickle
 
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.metrics import mean_absolute_error, accuracy_score, precision_score, recall_score, f1_score
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 
 # -------------------------
 # 1. LOAD DATASET
 # -------------------------
-data = pd.read_csv("datasetnew.csv")
+data = pd.read_csv("vehicletypee.csv")   # make sure this is your NEW dataset
 
 
 # -------------------------
@@ -27,23 +27,9 @@ data["Accident_History"] = data["Accident_History"].map(accident_map)
 
 
 # -------------------------
-# 3. RANGE → NUMERIC
+# 3. USE EXACT TARGET (NO CONVERSION)
 # -------------------------
-def convert_km_range(value):
-    if isinstance(value, str):
-        value = value.strip().replace(',', '')
-
-        if value.endswith('+'):
-            return float(value[:-1]) * 1.2
-
-        if '-' in value or '–' in value:
-            parts = value.replace('–', '-').split('-')
-            return (float(parts[0]) + float(parts[1])) / 2
-
-    return float(value)
-
-
-data["Remaining_KM"] = data["KM_Range_Before_Defect"].apply(convert_km_range)
+y = data["Remaining_KM"]
 
 
 # -------------------------
@@ -66,8 +52,6 @@ X = data[[
     "Accident_History"
 ]]
 
-y = data["Remaining_KM"]
-
 
 # -------------------------
 # 5. TRAIN-TEST SPLIT
@@ -78,12 +62,13 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 
 # -------------------------
-# 6. MODEL (REGRESSOR)
+# 6. MODEL (IMPROVED)
 # -------------------------
-model = DecisionTreeRegressor(
-    max_depth=12,
-    min_samples_split=20,
-    min_samples_leaf=10,
+model = RandomForestRegressor(
+    n_estimators=100,
+    max_depth=9,
+    min_samples_split=35,
+    min_samples_leaf=15,
     random_state=42
 )
 
@@ -101,7 +86,9 @@ y_pred = model.predict(X_test)
 
 
 # -------------------------
-# 9. RANGE FUNCTION
+# 9. REGRESSION METRICS
+# -------------------------
+# 9. RANGE FUNCTION (for evaluation only)
 # -------------------------
 def get_range(km):
     if km <= 3000:
@@ -115,25 +102,28 @@ def get_range(km):
     elif km <= 80000:
         return "50001–80000"
     else:
-        return "80001–120000"
+        return "80001+"
 
 
-# Convert predictions to range
-y_pred_range = [get_range(v) for v in y_pred]
+# Convert both actual & predicted into ranges
 y_test_range = [get_range(v) for v in y_test]
+y_pred_range = [get_range(v) for v in y_pred]
 
 
 # -------------------------
 # 10. METRICS
 # -------------------------
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+
 accuracy = accuracy_score(y_test_range, y_pred_range)
 precision = precision_score(y_test_range, y_pred_range, average='weighted', zero_division=0)
 recall = recall_score(y_test_range, y_pred_range, average='weighted', zero_division=0)
 f1 = f1_score(y_test_range, y_pred_range, average='weighted', zero_division=0)
+
 mae = mean_absolute_error(y_test, y_pred)
 
 
-print("\n--- MODEL PERFORMANCE (REGRESSOR ONLY) ---")
+print("\n--- MODEL PERFORMANCE ---")
 print(f"Accuracy  : {accuracy:.4f}")
 print(f"Precision : {precision:.4f}")
 print(f"Recall    : {recall:.4f}")
@@ -146,5 +136,4 @@ print(f"MAE       : {mae:.2f}")
 # -------------------------
 pickle.dump(model, open("model.pkl", "wb"))
 pickle.dump(X.columns, open("columns.pkl", "wb"))
-
 print("\nModel saved successfully!")
