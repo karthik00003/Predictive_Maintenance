@@ -1,0 +1,5 @@
+{
+  "exact_pred": "92,051",
+  "range_pred": "Excellent (80001+)",
+  "success": true
+}

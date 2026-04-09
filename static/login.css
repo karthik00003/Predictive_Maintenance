@@ -1,0 +1,19 @@
+/* --- ONLY FOR LOGIN PAGE --- */
+#login-page-container {
+    background-color: rgb(231, 231, 231);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Specific button for login to prevent collision with Dashboard blue */
+.login-page-btn {
+    height: 60px;
+    width: 150px;
+    border-radius: 50px;
+    background-image: linear-gradient(to right, rgb(255, 195, 110), rgb(255, 146, 91)) !important;
+    border: none;
+    cursor: pointer;
+    color: black;
+}

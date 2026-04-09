@@ -1,253 +1,1476 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>AutoPredict</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vehi Care | Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
 
-<style>
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family: 'Segoe UI', sans-serif;
-}
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Sora", sans-serif; }
+    body { 
+      background: #f5f7fa;
+      color: #2c3e50; min-height: 100vh; overflow-x: hidden;
+    }
 
-body{
-background:black;
-color:white;
-overflow-x:hidden;
-}
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: #e8eaed; }
+    ::-webkit-scrollbar-thumb { background: #60a5fa; border-radius: 5px; }
+    ::-webkit-scrollbar-thumb:hover { background: #93c5fd; }
 
-/* NAVBAR */
-.navbar{
-position:fixed;
-top:0;
-width:100%;
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:20px 60px;
-background:rgba(0,0,0,0.4);
-backdrop-filter:blur(10px);
-z-index:1000;
-}
+    .overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.35); z-index: 0;
+    }
 
-.logo{
-font-size:22px;
-font-weight:600;
-letter-spacing:2px;
-}
+    /* Background Video */
+    .bg-video {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      object-fit: cover; z-index: -2; opacity: 0.9;
+    }
 
-.nav-links a{
-margin:0 20px;
-text-decoration:none;
-color:white;
-opacity:0.7;
-transition:0.3s;
-}
+    /* NAVBAR */
+    .navbar {
+      position: fixed; top: 0; left: 0; width: 100%;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 16px 60px;
+      background: rgba(0, 0, 0, 0.85);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      z-index: 1000;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .logo {
+      font-size: 24px; font-weight: 800;
+      color: #60a5fa;
+      letter-spacing: -0.5px;
+      font-family: "Merriweather", serif;
+    }
+    .menu { display: flex; align-items: center; gap: 4px; }
+    .menu a {
+      text-decoration: none; color: #ffffff;
+      padding: 8px 16px; border-radius: 6px;
+      transition: all 0.2s ease; font-weight: 500; font-size: 14px; cursor: pointer;
+    }
+    .menu a:hover { color: #ffffff; background: rgba(255,255,255,0.1); }
+    .menu a.active { color: #ffffff; background: rgba(30,64,175,0.4); font-weight: 600; }
+    .logout-btn {
+      padding: 8px 24px; border-radius: 6px;
+      background: #1e40af;
+      color: white; font-weight: 600; font-size: 14px;
+      box-shadow: 0 1px 3px rgba(30,64,175,0.15);
+      transition: all 0.2s ease; cursor: pointer; border: none;
+      font-family: "Sora", sans-serif;
+    }
+    .logout-btn:hover { background: #1e3a8a; transform: translateY(-1px); box-shadow: 0 2px 6px rgba(30,64,175,0.25); }
 
-.nav-links a:hover{
-opacity:1;
-}
+    .main-content { margin-top: 70px; padding: 40px 60px; min-height: calc(100vh - 70px); animation: fadeIn 0.4s ease; z-index: 50; position: relative; }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
 
-/* HERO */
-.hero{
-height:100vh;
-position:relative;
-background:url('https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6') center/cover no-repeat;
-display:flex;
-flex-direction:column;
-justify-content:center;
-align-items:center;
-text-align:center;
-}
+    /* PAGE SWITCHING */
+    .page { display: none; opacity: 0; }
+    .page.active { display: block; opacity: 1; animation: pageIn 0.3s ease forwards; }
+    @keyframes pageIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
 
-.overlay{
-position:absolute;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:linear-gradient(to bottom, rgba(0,0,0,0.6), black);
-}
+    /* ---- HOME PAGE ---- */
+    .home-hero {
+      display: flex; flex-direction: column; align-items: center;
+      text-align: center; padding: 60px 0 40px;
+    }
+    .home-hero h1 {
+      font-size: 48px; font-weight: 800; letter-spacing: -1px; line-height: 1.2; margin-bottom: 16px;
+      color: #ffffff;
+      font-family: "Merriweather", serif;
+    }
+    .home-hero p { color: #e5e7eb; font-size: 18px; max-width: 580px; margin: 0 auto 32px; line-height: 1.6; }
+    .get-started-btn {
+      padding: 12px 40px; font-size: 16px; font-weight: 600; color: white;
+      background: #1e40af;
+      border: none; border-radius: 6px; cursor: pointer;
+      transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(30,64,175,0.15);
+      letter-spacing: 0px; font-family: "Sora", sans-serif;
+    }
+    .get-started-btn:hover { background: #1e3a8a; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(30,64,175,0.25); }
+    .home-features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 50px; }
 
-.hero-content{
-position:relative;
-z-index:2;
-}
+    .glass-card {
+      background: rgba(0, 0, 0, 0.35);
+      padding: 24px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
+      transition: all 0.3s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .glass-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(37,99,235,0.5);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    .glass-card .card-icon {
+      font-size: 32px; margin-bottom: 12px;
+      display: inline-block;
+    }
+    .glass-card h3 {
+      font-size: 16px; font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 8px;
+    }
+    .glass-card p { color: #e5e7eb; font-size: 13px; line-height: 1.6; }
 
-.hero h1{
-font-size:70px;
-font-weight:700;
-letter-spacing:1px;
-}
+    /* ---- PREDICT PAGE (form.html) ---- */
+    .dashboard-header { 
+      margin-bottom: 40px; display: flex; justify-content: space-between; align-items: center;
+      padding: 30px; border-radius: 18px;
+      background: linear-gradient(135deg, rgba(0,198,255,0.08), rgba(0,114,255,0.05));
+      border: 1px solid rgba(0,198,255,0.25);
+      box-shadow: 0 8px 32px rgba(0,198,255,0.08);
+      animation: slideDown 0.6s ease;
+    }
+    .dashboard-title { 
+      font-size: 38px; font-weight: 800; letter-spacing: -1px;
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .dashboard-subtitle { color: #aaa; margin-top: 8px; font-size: 15px; font-weight: 500; }
+    .dashboard-status { font-weight: 700; color: #00ff88; font-size: 13px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
+    .dashboard-context { color: #888; font-size: 12px; display: block; margin-top: 4px; }
+    .form-layout { display: grid; grid-template-columns: 1fr; gap: 30px; align-items: start; }
+    .cards-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; }
+    .input-card {
+      background: linear-gradient(135deg, rgba(0,198,255,0.05), rgba(0,114,255,0.03));
+      backdrop-filter: blur(15px);
+      padding: 24px; border-radius: 18px; border: 1px solid rgba(0,198,255,0.2);
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      animation: inputSlideIn 0.6s ease backwards;
+      position: relative;
+      overflow: hidden;
+    }
+    .input-card::before {
+      content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0,198,255,0.5), transparent);
+    }
+    .input-card:nth-child(1) { animation-delay: 0.1s; }
+    .input-card:nth-child(2) { animation-delay: 0.2s; }
+    .input-card:nth-child(3) { animation-delay: 0.3s; }
+    .input-card:nth-child(4) { animation-delay: 0.4s; }
+    @keyframes inputSlideIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .input-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(0,198,255,0.5);
+      box-shadow: 0 15px 35px rgba(0,198,255,0.15), inset 0 1px 0 rgba(255,255,255,0.1);
+      background: linear-gradient(135deg, rgba(0,198,255,0.1), rgba(0,114,255,0.08));
+    }
+    .card-header {
+      color: #00c6ff; font-size: 17px; font-weight: 700; margin-bottom: 18px;
+      border-bottom: 1px solid rgba(0,198,255,0.3); padding-bottom: 10px;
+      background: linear-gradient(90deg, #00c6ff, transparent);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .input-group { margin-bottom: 14px; }
+    .input-group label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 13px; color: #ccc; transition: color 0.3s ease; }
+    .input-group:hover label { color: #00c6ff; }
+    .range-hint { color: #00c6ff; font-weight: 400; font-size: 11px; margin-left: 5px; }
+    input[type="number"], input[type="text"], select {
+      width: 100%; padding: 13px 15px; border-radius: 12px;
+      border: 1px solid rgba(0,198,255,0.2); background: rgba(0,0,0,0.4);
+      color: white; font-size: 14px; font-family: "Poppins", sans-serif;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative;
+    }
+    input::placeholder { color: #555; }
+    select { appearance: none; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300c6ff'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; background-size: 20px; padding-right: 30px; }
+    select option { background: #1a1a1a; color: white; }
+    input:focus, select:focus {
+      outline: none; border-color: #00c6ff;
+      background: rgba(0,0,0,0.6); box-shadow: 0 0 20px rgba(0,198,255,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+      transform: scale(1.02);
+    }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"] { -moz-appearance: textfield; }
+    .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-.hero p{
-margin-top:15px;
-opacity:0.8;
-font-size:18px;
-}
+    /* ---- RESULT PANEL (result.html) ---- */
+    .result-panel { position: static; top: auto; display: flex; flex-direction: column; gap: 18px; width: 100%; margin-top: 40px; }
+    .result-card {
+      background: linear-gradient(135deg, rgba(0,198,255,0.08), rgba(0,114,255,0.05));
+      border: 1px solid rgba(0,198,255,0.3);
+      padding: 40px 28px; border-radius: 22px; text-align: center; flex: 1;
+      animation: resultFadeIn 0.6s ease;
+      box-shadow: 0 10px 40px rgba(0,198,255,0.1), inset 0 1px 0 rgba(255,255,255,0.1);
+      transition: all 0.3s ease;
+    }
+    @keyframes resultFadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .result-card:hover {
+      box-shadow: 0 20px 60px rgba(0,198,255,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+      transform: translateY(-4px);
+    }
+    .result-card h3 { color: #00c6ff; font-size: 15px; font-weight: 600; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; }
+    .result-placeholder { font-size: 52px; font-weight: 800; background: linear-gradient(135deg, #333, #555); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: pulse 2s ease infinite; }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .result-hint { color: #888; margin-top: 12px; font-size: 12px; line-height: 1.5; }
+    .result-section { margin-bottom: 18px; }
+    .result-section-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .result-range { font-size: 28px; font-weight: 800; background: linear-gradient(135deg, #00c6ff, #0072ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: slideUp 0.6s ease 0.2s both; }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .result-range span { font-size: 14px; color: #6aadff; margin-left: 4px; }
+    .result-divider { border-top: 1px solid rgba(0,198,255,0.2); padding-top: 18px; }
+    .result-exact { font-size: 52px; font-weight: 800; background: linear-gradient(135deg, #00c6ff, #00ff88); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 25px rgba(0,198,255,0.4); line-height: 1; animation: slideUp 0.6s ease 0.3s both; }
+    .result-exact-unit { font-size: 20px; color: #6aadff; margin-left: 4px; }
+    .result-badge {
+      display: inline-block; margin-top: 16px; padding: 8px 20px; border-radius: 20px; font-size: 13px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      animation: badgeBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s both;
+    }
+    @keyframes badgeBounce {
+      from { opacity: 0; transform: scale(0.5); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .badge-good    { background: rgba(0,255,136,0.2); color: #00ff88; border: 2px solid rgba(0,255,136,0.5); box-shadow: 0 0 20px rgba(0,255,136,0.2); }
+    .badge-warning { background: rgba(255,200,0,0.2); color: #ffc800; border: 2px solid rgba(255,200,0,0.5); box-shadow: 0 0 20px rgba(255,200,0,0.2); }
+    .badge-critical{ background: rgba(255,80,80,0.2);  color: #ff5050; border: 2px solid rgba(255,80,80,0.5); box-shadow: 0 0 20px rgba(255,80,80,0.2); }
+    .predict-btn {
+      width: 100%; padding: 20px; font-size: 17px; font-weight: 800; color: white;
+      background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+      border: none; border-radius: 50px; cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 8px 25px rgba(0,114,255,0.4), 0 0 20px rgba(0,198,255,0.2);
+      letter-spacing: 1.5px; font-family: "Poppins", sans-serif; text-transform: uppercase;
+      position: relative; overflow: hidden;
+      animation: buttonSlideUp 0.6s ease 0.3s both;
+    }
+    @keyframes buttonSlideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .predict-btn::before {
+      content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.5s ease;
+    }
+    .predict-btn:hover::before { left: 100%; }
+    .predict-btn:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 50px rgba(0,114,255,0.6), 0 0 30px rgba(0,198,255,0.4);
+      filter: brightness(1.15);
+    }
+    .predict-btn.btn-export {
+      background: linear-gradient(135deg, #ff8c00 0%, #ff6347 100%);
+      box-shadow: 0 8px 25px rgba(255,99,71,0.4), 0 0 20px rgba(255,140,0,0.2);
+    }
+    .predict-btn.btn-export:hover {
+      box-shadow: 0 15px 50px rgba(255,99,71,0.6), 0 0 30px rgba(255,140,0,0.4);
+      filter: brightness(1.15);
+    }
+    .predict-btn:active {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0,114,255,0.5);
+    }
 
-.cta{
-margin-top:30px;
-padding:15px 40px;
-background:white;
-color:black;
-border-radius:5px;
-text-decoration:none;
-font-weight:bold;
-transition:0.3s;
-}
+    /* ---- ANALYSIS PAGE ---- */
+    .page-header { margin-bottom: 34px; }
+    .page-header h1 { font-size: 34px; font-weight: 800; color: #fff; letter-spacing: -1px; }
+    .page-header p { color: #888; margin-top: 6px; font-size: 15px; }
+    .analysis-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 22px; margin-bottom: 30px; }
+    .stat-card {
+      background: linear-gradient(135deg, rgba(0,198,255,0.08), rgba(0,114,255,0.05));
+      border: 1px solid rgba(0,198,255,0.25);
+      border-radius: 18px; padding: 26px 22px; text-align: center;
+      backdrop-filter: blur(10px);
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      animation: statSlideIn 0.6s ease backwards;
+      box-shadow: 0 8px 32px rgba(0,198,255,0.1);
+    }
+    .stat-card:nth-child(1) { animation-delay: 0.1s; }
+    .stat-card:nth-child(2) { animation-delay: 0.2s; }
+    .stat-card:nth-child(3) { animation-delay: 0.3s; }
+    .stat-card:nth-child(4) { animation-delay: 0.4s; }
+    @keyframes statSlideIn {
+      from { opacity: 0; transform: translateY(20px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .stat-card:hover {
+      transform: translateY(-8px);
+      border-color: rgba(0,198,255,0.5);
+      box-shadow: 0 15px 50px rgba(0,198,255,0.25);
+      background: linear-gradient(135deg, rgba(0,198,255,0.12), rgba(0,114,255,0.08));
+    }
+    .stat-label { color: #888; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; font-weight: 600; }
+    .stat-value {
+      font-size: 42px; font-weight: 900;
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      animation: countUp 1s ease;
+    }
+    @keyframes countUp {
+      from { opacity: 0; transform: scale(0.5); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .stat-sub { color: #888; font-size: 12px; margin-top: 6px; font-weight: 500; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+    .chart-label { font-size: 17px; font-weight: 700; background: linear-gradient(135deg, #00c6ff, #a0d4ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; }
+    .bar-row { margin-bottom: 18px; transition: all 0.3s ease; }
+    .bar-row:hover { transform: translateX(5px); }
+    .bar-meta { display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .bar-name { font-size: 13px; color: #ccc; font-weight: 600; }
+    .bar-pct { font-size: 13px; font-weight: 700; }
+    .bar-track { background: rgba(255,255,255,0.08); border-radius: 8px; height: 8px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 8px; transition: width 0.6s ease; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; font-size: 11px; color: #666; padding-bottom: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    th:not(:first-child) { text-align: right; }
+    td { padding: 10px 0; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    td:first-child { color: #ccc; }
+    td:nth-child(2) { color: #888; text-align: right; }
+    td:last-child { text-align: right; }
+    thead tr { border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .pill { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px; }
 
-.cta:hover{
-background:#ddd;
-transform:scale(1.05);
-}
+    /* ---- ABOUT PAGE ---- */
+    .about-section { max-width: 800px; margin: 0 auto; text-align: center; padding: 40px 0; }
+    .about-section h1 {
+      font-size: 48px; font-weight: 800; margin-bottom: 20px;
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .about-section p { color: #ccc; font-size: 17px; line-height: 1.8; margin-bottom: 20px; }
+    .team-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; margin-top: 50px; }
+    .team-card {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 18px; padding: 28px 20px; text-align: center; backdrop-filter: blur(10px);
+      transition: border-color 0.3s ease, transform 0.3s ease;
+    }
+    .team-card:hover { border-color: rgba(0,198,255,0.3); transform: translateY(-3px); }
+    .team-avatar {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; margin: 0 auto 14px;
+    }
+    .team-card h4 { font-size: 15px; font-weight: 700; color: #eee; margin-bottom: 4px; }
+    .team-card span { color: #00c6ff; font-size: 13px; }
 
-/* STATS */
-.stats{
-position:absolute;
-bottom:40px;
-width:100%;
-display:flex;
-justify-content:space-around;
-text-align:center;
-z-index:2;
-}
+    /* ---- VEHICLES PAGE ---- */
+    .vehicle-controls { margin-bottom: 30px; }
+    .add-vehicle-btn {
+      padding: 12px 28px; border-radius: 10px; background: linear-gradient(135deg, #00c6ff, #0072ff);
+      color: white; font-weight: 600; font-size: 15px; border: none; cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0,198,255,0.3); transition: all 0.3s ease; font-family: Poppins;
+    }
+    .add-vehicle-btn:hover { box-shadow: 0 8px 30px rgba(0,198,255,0.5); transform: translateY(-2px); }
+    .add-vehicle-container {
+      background: linear-gradient(135deg, rgba(0,198,255,0.08), rgba(0,114,255,0.05));
+      border: 1px solid rgba(0,198,255,0.3); border-radius: 18px; padding: 28px;
+      margin-bottom: 30px; backdrop-filter: blur(10px);
+    }
+    .form-card { }
+    .form-card h3 { color: #00c6ff; font-size: 22px; margin-bottom: 20px; }
+    .form-buttons { display: flex; gap: 12px; margin-top: 20px; }
+    .btn-primary, .btn-secondary {
+      padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;
+      border: none; font-family: Poppins; transition: all 0.3s ease;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #00c6ff, #0072ff); color: white;
+      box-shadow: 0 4px 15px rgba(0,198,255,0.3);
+    }
+    .btn-primary:hover { box-shadow: 0 8px 30px rgba(0,198,255,0.5); transform: translateY(-2px); }
+    .btn-secondary {
+      background: rgba(255,255,255,0.1); color: #aaa; border: 1px solid rgba(255,255,255,0.2);
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.15); color: white; }
+    .vehicles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+    .vehicle-card {
+      background: linear-gradient(135deg, rgba(0,198,255,0.08), rgba(0,114,255,0.05));
+      border: 1px solid rgba(0,198,255,0.3); border-radius: 18px; padding: 22px;
+      backdrop-filter: blur(10px); transition: all 0.3s ease;
+    }
+    .vehicle-card:hover { transform: translateY(-6px); border-color: rgba(0,198,255,0.5); box-shadow: 0 12px 40px rgba(0,198,255,0.15); }
+    .vehicle-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px; }
+    .vehicle-title { font-size: 18px; font-weight: 700; color: #00c6ff; }
+    .vehicle-health { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .health-good { background: rgba(0,255,136,0.2); color: #00ff88; }
+    .health-warning { background: rgba(255,200,0,0.2); color: #ffc800; }
+    .health-critical { background: rgba(255,80,80,0.2); color: #ff5050; }
+    .vehicle-info { color: #999; font-size: 14px; margin: 8px 0; }
+    .vehicle-info strong { color: #00c6ff; }
+    .vehicle-actions { display: flex; gap: 8px; margin-top: 15px; }
+    .vehicle-actions button { flex: 1; padding: 8px; border-radius: 8px; border: 1px solid rgba(0,198,255,0.3); background: transparent; color: #00c6ff; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s ease; }
+    .vehicle-actions button:hover { background: rgba(0,198,255,0.1); }
 
-.stat h2{
-font-size:32px;
-}
+    /* ---- HISTORY PAGE ---- */
+    .history-controls { margin-bottom: 24px; }
+    .history-content { }
+    .history-table { width: 100%; border-collapse: collapse; }
+    .history-table th { 
+      padding: 14px 12px; text-align: left; color: #00c6ff; border-bottom: 2px solid rgba(0,198,255,0.3); 
+      font-weight: 700; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px;
+      background: rgba(0,198,255,0.05);
+    }
+    .history-table td { 
+      padding: 14px 12px; border-bottom: 1px solid rgba(0,198,255,0.1); color: #ccc;
+      transition: background 0.2s ease;
+    }
+    .history-table tr:hover td {
+      background: rgba(0,198,255,0.08);
+    }
+    .history-table tr:hover { background: rgba(0,198,255,0.05); }
 
-.stat p{
-opacity:0.7;
-}
+    /* ---- ANALYSIS PAGE CHARTS ---- */
+    .charts-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 30px; margin-bottom: 40px; }
+    .chart-card {
+      background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(0,198,255,0.05));
+      backdrop-filter: blur(15px); padding: 30px; border-radius: 20px;
+      border: 1px solid rgba(0,198,255,0.15); transition: all 0.4s ease;
+    }
+    .chart-card:hover { border-color: rgba(0,198,255,0.3); box-shadow: 0 8px 32px rgba(0,198,255,0.2); }
+    .chart-title {
+      font-size: 18px; font-weight: 700; color: #00c6ff; margin-bottom: 20px;
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+    .chart-description { font-size: 12px; color: #999; margin-top: 8px; }
+    canvas { display: block; max-width: 100%; height: auto; }
+    .chart-legend { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(0,198,255,0.1); }
+    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #ccc; }
+    .legend-color { width: 12px; height: 12px; border-radius: 2px; }
 
-/* FEATURES */
-.section{
-padding:100px 60px;
-background:black;
-}
+    @media (max-width: 1200px) {
+      .cards-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    
+    @media (max-width: 1200px) {
+      .cards-grid { grid-template-columns: repeat(2, 1fr); }
+    }
 
-.section h2{
-text-align:center;
-margin-bottom:60px;
-font-size:40px;
-}
-
-.features{
-display:flex;
-justify-content:space-around;
-flex-wrap:wrap;
-gap:30px;
-}
-
-.feature{
-width:280px;
-padding:25px;
-border-radius:10px;
-background:rgba(255,255,255,0.05);
-backdrop-filter:blur(10px);
-transition:0.4s;
-}
-
-.feature:hover{
-transform:translateY(-10px);
-background:rgba(255,255,255,0.1);
-}
-
-.feature h3{
-margin-bottom:10px;
-}
-
-/* FOOTER */
-.footer{
-text-align:center;
-padding:30px;
-opacity:0.5;
-background:black;
-}
-</style>
+    @media (max-width: 900px) {
+      .navbar { padding: 18px 24px; }
+      .main-content { padding: 24px; }
+      .cards-grid { grid-template-columns: 1fr; }
+      .form-layout, .two-col { grid-template-columns: 1fr; }
+      .result-panel { position: static; }
+      .home-hero h1 { font-size: 38px; }
+      .vehicles-grid { grid-template-columns: 1fr; }
+      .anomalies-grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 
 <body>
+  <video class="bg-video" autoplay muted loop>
+    <source src="/static/bg.mp4" type="video/mp4">
+  </video>
+  <div class="overlay"></div>
 
-<!-- NAVBAR -->
-<div class="navbar">
-<div class="logo">AUTOPREDICT</div>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="logo">VEHI CARE</div>
+    <div class="menu">
+      <a onclick="showPage('home')"     id="nav-home"     class="active">Home</a>
+      <a onclick="showPage('predict')"  id="nav-predict">Predict</a>
+      <a onclick="showPage('vehicles')" id="nav-vehicles">My Vehicles</a>
+      <a onclick="showPage('history')"  id="nav-history">History</a>
+      <a onclick="showPage('analysis')" id="nav-analysis">Analysis</a>
+      <a onclick="showPage('about')"    id="nav-about">About Us</a>
+    </div>
+    <div>
+      <a href="/logout" class="logout-btn">Logout</a>
+    </div>
+  </nav>
 
-<div class="nav-links">
-<a href="#">Home</a>
-<a href="#">Features</a>
-<a href="#">About</a>
-<a href="/predict_page">Predict</a>
-</div>
-</div>
+  <main class="main-content">
 
-<!-- HERO -->
-<div class="hero">
-<div class="overlay"></div>
+    <!-- ==================== HOME PAGE (index.html) ==================== -->
+    <div id="page-home" class="page active">
+      <div class="home-hero">
+        <h1>Vehicle Health Prediction System</h1>
+        <p>Predict your vehicle's remaining useful life and detect potential system failures before they happen — at idle, in seconds.</p>
+        <button class="get-started-btn" onclick="showPage('predict')">Get Started</button>
+      </div>
+      <div class="home-features">
+        <div class="glass-card"><div class="card-icon">🔧</div><h3>Engine Diagnostics</h3><p>Monitor RPM, oil pressure, and engine temperature at idle for early fault detection.</p></div>
+        <div class="glass-card"><div class="card-icon">⚡</div><h3>Electrical Health</h3><p>Track battery voltage and brake system pressure to avoid unexpected failures.</p></div>
+        <div class="glass-card"><div class="card-icon">🛞</div><h3>Tire & Safety</h3><p>Assess tire condition and pressure to maintain peak grip and braking performance.</p></div>
+        <div class="glass-card"><div class="card-icon">📊</div><h3>Predictive Analytics</h3><p>AI estimates the remaining useful life of your vehicle in kilometers before service.</p></div>
+        <div class="glass-card"><div class="card-icon">🚗</div><h3>Multi-Vehicle Support</h3><p>Supports Hatchback, Sedan, SUV, and Truck profiles for accurate predictions.</p></div>
+        <div class="glass-card"><div class="card-icon">📋</div><h3>Full History Tracking</h3><p>Log service intervals, mileage, and accident history for a complete vehicle profile.</p></div>
+      </div>
+    </div>
 
-<div class="hero-content">
-<h1>Predict Before It Breaks</h1>
-<p>AI-powered vehicle health prediction system</p>
+    <!-- ==================== PREDICT PAGE (form.html) ==================== -->
+    <div id="page-predict" class="page">
+      <div class="dashboard-header">
+        <div>
+          <h1 class="dashboard-title">Prediction Dashboard</h1>
+          <p class="dashboard-subtitle">Perform vehicle checks while running at <b>Idle</b>.</p>
+        </div>
+        <div style="text-align:right;">
+          <span class="dashboard-status">Ready to Monitor</span>
+          <span class="dashboard-context">All input parameters are required.</span>
+        </div>
+      </div>
 
-<a href="/predict_page" class="cta">Start Prediction</a>
-</div>
+      <div class="form-layout">
+        <div class="cards-grid">
 
-<!-- STATS -->
-<div class="stats">
-<div class="stat">
-<h2>0–3K</h2>
-<p>Worst Condition</p>
-</div>
+          <!-- General Specs -->
+          <div class="input-card">
+            <div class="card-header">🚗 General Specs</div>
+            <div class="input-group">
+              <label>Vehicle Type</label>
+              <select id="Vehicle_Type">
+                <option value="" disabled selected>Select vehicle model</option>
+                <option value="Hatchback">Hatchback</option>
+                <option value="Sedan">Sedan</option>
+                <option value="SUV">SUV</option>
+                <option value="Truck">Truck</option>
+              </select>
+            </div>
+            <div class="input-row">
+              <div class="input-group">
+                <label>Age <span class="range-hint">(0 – 15 y)</span></label>
+                <input type="number" id="Vehicle_Age" placeholder="5">
+              </div>
+              <div class="input-group">
+                <label>Service <span class="range-hint">(0 – 12 mo)</span></label>
+                <input type="number" id="Last_Service_Months" placeholder="3">
+              </div>
+            </div>
+            <div class="input-group">
+              <label>Total Mileage <span class="range-hint">(0 – 350,000 km)</span></label>
+              <input type="number" id="Mileage" placeholder="e.g. 45000">
+            </div>
+          </div>
 
-<div class="stat">
-<h2>AI</h2>
-<p>Driven Insights</p>
-</div>
+          <!-- Engine Vitals -->
+          <div class="input-card">
+            <div class="card-header">🔧 Engine Vitals (Idle)</div>
+            <div class="input-group">
+              <label>Idle RPM <span class="range-hint">(700 – 1000)</span></label>
+              <input type="number" id="RPM" placeholder="RPM at rest">
+            </div>
+            <div class="input-row">
+              <div class="input-group">
+                <label>Temp <span class="range-hint">(80 – 105 °C)</span></label>
+                <input type="number" id="Engine_Temp" placeholder="90">
+              </div>
+              <div class="input-group">
+                <label>Oil PSI <span class="range-hint">(25 – 45)</span></label>
+                <input type="number" id="Oil_Pressure" placeholder="35">
+              </div>
+            </div>
+            <div class="input-group">
+              <label>Fuel Consumption <span class="range-hint">(5 – 20 km/l)</span></label>
+              <input type="number" step="0.1" id="Fuel_Consumption" placeholder="12">
+            </div>
+          </div>
 
-<div class="stat">
-<h2>80K+</h2>
-<p>Best Condition</p>
-</div>
-</div>
+          <!-- Electrical & Safety -->
+          <div class="input-card">
+            <div class="card-header">⚡ Electrical & Safety</div>
+            <div class="input-group">
+              <label>Battery Voltage <span class="range-hint">(12 – 14.5 V)</span></label>
+              <input type="number" step="0.01" id="Battery_Voltage" placeholder="13.5">
+            </div>
+            <div class="input-row">
+              <div class="input-group">
+                <label>Brake PSI <span class="range-hint">(30 – 45)</span></label>
+                <input type="number" id="Brake_Pressure" placeholder="38">
+              </div>
+              <div class="input-group">
+                <label>Tire PSI <span class="range-hint">(30 – 35)</span></label>
+                <input type="number" id="Tire_Pressure" placeholder="32">
+              </div>
+            </div>
+            <div class="input-group">
+              <label>Accident History</label>
+              <select id="Accident_History">
+                <option value="No">No Previous Accidents</option>
+                <option value="Yes">Has Accident History</option>
+              </select>
+            </div>
+          </div>
 
-</div>
+          <!-- Sensory Analysis -->
+          <div class="input-card">
+            <div class="card-header">👁️ Sensory Analysis</div>
+            <div class="input-group">
+              <label>Tire Condition</label>
+              <select id="Tire_Condition">
+                <option value="Good">Good</option>
+                <option value="Moderate">Moderate</option>
+                <option value="Worn">Worn</option>
+                <option value="Critical">Critical</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label>Idle Vibration Level</label>
+              <select id="Vibration_Level">
+                <option value="Low">Low (Stable)</option>
+                <option value="Medium">Medium (Slight shaking)</option>
+                <option value="High">High (Rough idle)</option>
+              </select>
+            </div>
+            <p style="font-size:12px;color:#666;margin-top:14px;">Ensure the engine is at normal operating temperature before reading vital signs.</p>
+          </div>
 
-<!-- FEATURES -->
-<div class="section">
-<h2>Why AutoPredict?</h2>
+        </div>
 
-<div class="features">
+        <!-- ==================== RESULT PANEL (result.html) ==================== -->
+        <aside class="result-panel">
+          <div class="result-card">
+            <h3>Predicted Remaining Useful Life</h3>
 
-<div class="feature">
-<h3>AI Prediction</h3>
-<p>Uses ML models to estimate breakdown time.</p>
-</div>
+            <div id="result-default">
+              <div class="result-placeholder">---</div>
+              <p class="result-hint">Submit your sensor data to calculate kilometers remaining before potential failure.</p>
+            </div>
 
-<div class="feature">
-<h3>Real-Time Monitoring</h3>
-<p>Track vehicle health dynamically.</p>
-</div>
+            <div id="result-loading" style="display:none;">
+              <div style="padding: 40px 28px; text-align: center;">
+                <div style="font-size: 48px; margin-bottom: 16px; animation: spin 2s linear infinite;">⚙️</div>
+                <p style="color:#00c6ff; font-size: 16px; font-weight: 600; margin: 10px 0; animation: pulse 1.5s ease infinite;">Analyzing Sensor Data...</p>
+                <p style="color: #888; font-size: 12px;">Processing 14 parameters with ML model</p>
+              </div>
+            </div>
 
-<div class="feature">
-<h3>Early Alerts</h3>
-<p>Detect issues before failure occurs.</p>
-</div>
+            <div id="result-output" style="display:none;">
+              <div class="result-section">
+                <p class="result-section-label">Predicted Range</p>
+                <div class="result-range">
+                  <span id="out-range-low">--</span> – <span id="out-range-high">--</span>
+                  <span>km</span>
+                </div>
+              </div>
+              <div class="result-divider">
+                <p class="result-section-label">Estimated Remaining KM</p>
+                <div class="result-exact">
+                  <span id="out-exact">--</span><span class="result-exact-unit">km</span>
+                </div>
+              </div>
+              <div id="out-badge" class="result-badge"></div>
+              <p class="result-hint" style="margin-top:10px;">Estimated kilometers before the next significant maintenance event.</p>
+            </div>
+          </div>
 
-<div class="feature">
-<h3>Data Intelligence</h3>
-<p>Deep insights from sensor data.</p>
-</div>
+          <button class="predict-btn" onclick="runPrediction()">Calculate Remaining KM</button>
+        </aside>
+      </div>
+    </div>
 
-</div>
-</div>
+    <!-- ==================== ANALYSIS PAGE ==================== -->
+    <div id="page-analysis" class="page">
+      <div class="page-header">
+        <h1>Fleet Analytics Dashboard</h1>
+        <p>Comprehensive data analysis and insights from 10,000+ vehicle records</p>
+      </div>
+      <div class="analysis-grid" style="margin-bottom:30px;">
+        <div class="stat-card"><div class="stat-label">Total Vehicles Analyzed</div><div class="stat-value">10,000</div><div class="stat-sub">Complete dataset</div></div>
+        <div class="stat-card"><div class="stat-label">Average Health Score</div><div class="stat-value">62.5</div><div class="stat-sub">Fleet wellness</div></div>
+        <div class="stat-card"><div class="stat-label">Avg Engine Temperature</div><div class="stat-value">95.8 <span style="font-size:18px">°C</span></div><div class="stat-sub">Typical operation</div></div>
+        <div class="stat-card"><div class="stat-label">Avg Fuel Consumption</div><div class="stat-value">10.2 <span style="font-size:18px">L/100km</span></div><div class="stat-sub">Fleet efficiency</div></div>
+      </div>
+      <div class="charts-container">
+        <div class="chart-card">
+          <div class="chart-title">📊 Vehicle Type Distribution</div>
+          <canvas id="chartVehicleType" width="450" height="300"></canvas>
+          <div class="chart-description">Breakdown of vehicle types in the dataset</div>
+          <div class="chart-legend" id="vehicleTypeLegend"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">❤️ Health Score Analysis</div>
+          <canvas id="chartHealthScore" width="450" height="300"></canvas>
+          <div class="chart-description">Distribution of vehicle health scores (0-100)</div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">📈 Mileage vs Health Score</div>
+          <canvas id="chartMileageHealth" width="450" height="300"></canvas>
+          <div class="chart-description">Correlation between vehicle mileage and health</div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">🎯 Average Metrics by Vehicle Type</div>
+          <canvas id="chartMetricsByType" width="450" height="300"></canvas>
+          <div class="chart-description">Comparative analysis of key metrics per vehicle type</div>
+        </div>
 
-<!-- FOOTER -->
-<div class="footer">
-© 2026 AutoPredict
-</div>
+      </div>
+    </div>
 
+    <!-- ==================== ABOUT PAGE ==================== -->
+    <div id="page-about" class="page">
+      <div class="about-section">
+        <h1>About Vehi Care</h1>
+        <p>Vehi Care is a Vehicle Health Prediction System designed to help drivers and fleet managers predict maintenance needs before they become costly failures. By analyzing idle-state sensor data, we deliver accurate remaining useful life estimates in seconds.</p>
+        <p>Our predictive engine was trained on thousands of real-world vehicle diagnostics across multiple vehicle classes — Hatchback, Sedan, SUV, and Truck — ensuring accurate, class-specific predictions for every driver.</p>
+        <p>We believe preventive maintenance should be accessible to everyone. No OBD scanners, no mechanic visits — just your vehicle's idle vitals and an instant AI-powered assessment.</p>
+        <div class="team-grid">
+          <div class="team-card"><div class="team-avatar">🧠</div><h4>AI Engine</h4><span>Prediction Core</span></div>
+          <div class="team-card"><div class="team-avatar">🔬</div><h4>Diagnostics</h4><span>Sensor Analysis</span></div>
+          <div class="team-card"><div class="team-avatar">📡</div><h4>Fleet Monitor</h4><span>Real-time Tracking</span></div>
+          <div class="team-card"><div class="team-avatar">🔐</div><h4>Data Security</h4><span>Privacy & Safety</span></div>
+        </div>
+        <div class="glass-card" style="margin-top:40px;text-align:left;">
+          <div class="card-icon" style="font-size:24px;margin-bottom:12px;">🎯</div>
+          <h3>Our Mission</h3>
+          <p style="margin-top:8px;">To make vehicle health prediction intelligent, instant, and universally accessible — protecting both vehicles and their owners from unexpected breakdowns through advanced predictive analytics.</p>
+        </div>
+        <div class="glass-card" style="margin-top:30px;text-align:left;">
+          <div class="card-icon" style="font-size:24px;margin-bottom:12px;">🔍</div>
+          <h3>Features Used in Prediction Model</h3>
+          <p style="margin-top:12px; line-height: 1.8;">Our Vehicle Health Prediction System analyzes 14 key sensor features to forecast remaining useful life:</p>
+          <div style="margin-top:16px;">
+            <p style="margin:8px 0; color:#e5e7eb;"><strong>General Specs:</strong> Vehicle Type, Age, Service Months, Total Mileage</p>
+            <p style="margin:8px 0; color:#e5e7eb;"><strong>Engine Vitals:</strong> Idle RPM, Engine Temperature, Oil Pressure, Fuel Consumption</p>
+            <p style="margin:8px 0; color:#e5e7eb;"><strong>Electrical & Safety:</strong> Battery Voltage, Brake Pressure, Tire Pressure, Accident History</p>
+            <p style="margin:8px 0; color:#e5e7eb;"><strong>Sensory Analysis:</strong> Tire Condition, Idle Vibration Level</p>
+          </div>
+          <p style="margin-top:16px; font-size:13px; color:#a0a0a0;">These 14 interconnected parameters trained on thousands of real-world diagnostics enable us to deliver accurate, class-specific maintenance predictions in seconds.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== MY VEHICLES PAGE ==================== -->
+    <div id="page-vehicles" class="page">
+      <div class="page-header">
+        <h1>My Vehicles</h1>
+        <p>Manage your registered vehicles and track their health status</p>
+      </div>
+      <div class="vehicle-controls">
+        <button class="add-vehicle-btn" onclick="toggleAddVehicleForm()">+ Add New Vehicle</button>
+      </div>
+      <div id="add-vehicle-form" class="add-vehicle-container" style="display:none;">
+        <div class="form-card">
+          <h3>Register New Vehicle</h3>
+          <div class="input-group">
+            <label>Vehicle Type</label>
+            <select id="new-vehicle-type">
+              <option value="">Select type</option>
+              <option value="Hatchback">Hatchback</option>
+              <option value="Sedan">Sedan</option>
+              <option value="SUV">SUV</option>
+              <option value="Truck">Truck</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>Make</label>
+            <input type="text" id="new-vehicle-make" placeholder="e.g., Toyota">
+          </div>
+          <div class="input-group">
+            <label>Model</label>
+            <input type="text" id="new-vehicle-model" placeholder="e.g., Camry">
+          </div>
+          <div class="input-group">
+            <label>Year</label>
+            <input type="number" id="new-vehicle-year" placeholder="2020">
+          </div>
+          <div class="input-group">
+            <label>VIN (Optional)</label>
+            <input type="text" id="new-vehicle-vin" placeholder="Vehicle Identification Number">
+          </div>
+          <div class="form-buttons">
+            <button class="btn-primary" onclick="addVehicle()">Save Vehicle</button>
+            <button class="btn-secondary" onclick="toggleAddVehicleForm()">Cancel</button>
+          </div>
+        </div>
+      </div>
+      <div id="vehicles-list" class="vehicles-grid">
+        <p style="text-align:center;color:#999;">Loading vehicles...</p>
+      </div>
+    </div>
+
+    <!-- ==================== HISTORY PAGE ==================== -->
+    <div id="page-history" class="page">
+      <div class="page-header">
+        <h1>Prediction History</h1>
+        <p>Track your vehicle predictions over time and view trends</p>
+      </div>
+      <div class="history-controls">
+        <label style="color: #aaa; font-size: 13px; font-weight: 600; margin-right: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Filter by Vehicle:</label>
+        <select id="history-vehicle-filter" onchange="loadHistory()" style="padding:10px 15px;border-radius:8px;border:1px solid rgba(0,198,255,0.3);background:rgba(0,0,0,0.3);color:white;font-family:Poppins;cursor:pointer;transition:all 0.3s ease;">
+          <option value="">All Vehicles</option>
+        </select>
+      </div>
+      <div class="history-content">
+        <div class="glass-card" style="margin-bottom:30px; padding: 30px;">
+          <h3 style="margin-bottom: 20px; font-size: 18px; font-weight: 700; color: #00c6ff;">📈 Remaining KM Trend</h3>
+          <div style="position: relative; width: 100%; height: 350px; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 20px; border: 1px solid rgba(0,198,255,0.15);">
+            <canvas id="historyChart" style="display: block; width: 100%; height: 100%;"></canvas>
+          </div>
+          <p style="margin-top: 15px; font-size: 12px; color: #888;">Showing last 10 predictions. Green = Good Health, Orange = Service Soon, Red = Critical</p>
+        </div>
+        <div class="glass-card" style="padding: 30px;">
+          <h3 style="margin-bottom: 20px; font-size: 18px; font-weight: 700; color: #00c6ff;">📋 Recent Predictions</h3>
+          <table id="history-table" style="width:100%;border-collapse:collapse;">
+            <thead>
+              <tr style="border-bottom:1px solid rgba(0,198,255,0.2);">
+                <th style="padding:12px;text-align:left;color:#00c6ff;">Date</th>
+                <th style="padding:12px;text-align:left;color:#00c6ff;">Vehicle</th>
+                <th style="padding:12px;text-align:left;color:#00c6ff;">Predicted KM</th>
+                <th style="padding:12px;text-align:left;color:#00c6ff;">Status</th>
+              </tr>
+            </thead>
+            <tbody id="history-tbody">
+              <tr><td colspan="4" style="padding:20px;text-align:center;color:#999;">Loading history...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+
+
+  </main>
+
+  <script>
+    // ---- PAGE NAVIGATION ----
+    function showPage(name) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.menu a').forEach(a => a.classList.remove('active'));
+      document.getElementById('page-' + name).classList.add('active');
+      document.getElementById('nav-' + name).classList.add('active');
+      
+      if (name === 'analysis') {
+        setTimeout(fetchDatasetAndRender, 100);
+      }
+    }
+
+    // ---- PREDICTION LOGIC ----
+    function validatePredictionForm() {
+      var fields = {
+        'Vehicle_Type': 'Vehicle Type',
+        'Vehicle_Age': 'Vehicle Age',
+        'Mileage': 'Mileage',
+        'RPM': 'RPM',
+        'Engine_Temp': 'Engine Temperature',
+        'Oil_Pressure': 'Oil Pressure',
+        'Fuel_Consumption': 'Fuel Consumption',
+        'Battery_Voltage': 'Battery Voltage',
+        'Brake_Pressure': 'Brake Pressure',
+        'Tire_Pressure': 'Tire Pressure',
+        'Tire_Condition': 'Tire Condition',
+        'Vibration_Level': 'Vibration Level',
+        'Last_Service_Months': 'Last Service Months',
+        'Accident_History': 'Accident History'
+      };
+
+      for (var fieldId in fields) {
+        var value = document.getElementById(fieldId).value;
+        if (!value || value === '') {
+          alert('❌ Please fill in: ' + fields[fieldId]);
+          return false;
+        }
+      }
+      return true;
+    }
+
+    function runPrediction() {
+      if (!validatePredictionForm()) return;
+
+      document.getElementById('result-default').style.display = 'none';
+      document.getElementById('result-loading').style.display = 'block';
+      document.getElementById('result-output').style.display = 'none';
+
+      var formData = new FormData();
+      formData.append('Vehicle_Type', document.getElementById('Vehicle_Type').value);
+      formData.append('Vehicle_Age', document.getElementById('Vehicle_Age').value);
+      formData.append('Mileage', document.getElementById('Mileage').value);
+      formData.append('Engine_Temp', document.getElementById('Engine_Temp').value);
+      formData.append('RPM', document.getElementById('RPM').value);
+      formData.append('Oil_Pressure', document.getElementById('Oil_Pressure').value);
+      formData.append('Fuel_Consumption', document.getElementById('Fuel_Consumption').value);
+      formData.append('Battery_Voltage', document.getElementById('Battery_Voltage').value);
+      formData.append('Brake_Pressure', document.getElementById('Brake_Pressure').value);
+      formData.append('Tire_Pressure', document.getElementById('Tire_Pressure').value);
+      formData.append('Tire_Condition', document.getElementById('Tire_Condition').value);
+      formData.append('Vibration_Level', document.getElementById('Vibration_Level').value);
+      formData.append('Last_Service_Months', document.getElementById('Last_Service_Months').value);
+      formData.append('Accident_History', document.getElementById('Accident_History').value);
+
+      fetch('/predict', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          alert('❌ Prediction Error: ' + data.error);
+          document.getElementById('result-loading').style.display = 'none';
+          document.getElementById('result-default').style.display = 'block';
+          return;
+        }
+
+        var exact = data.exact_pred || 50000;
+        var margin = Math.round(exact * 0.10);
+        var low = Math.max(0, exact - margin);
+        var high = exact + margin;
+
+        document.getElementById('out-range-low').textContent = low.toLocaleString();
+        document.getElementById('out-range-high').textContent = high.toLocaleString();
+        document.getElementById('out-exact').textContent = exact.toLocaleString();
+
+        var badge = document.getElementById('out-badge');
+        badge.className = 'result-badge';
+        if (exact > 60000) {
+          badge.classList.add('badge-good');
+          badge.textContent = '✓ Vehicle in Good Health';
+        } else if (exact > 30000) {
+          badge.classList.add('badge-warning');
+          badge.textContent = '⚠ Service Recommended Soon';
+        } else {
+          badge.classList.add('badge-critical');
+          badge.textContent = '🔴 Immediate Attention Needed';
+        }
+
+        document.getElementById('result-loading').style.display = 'none';
+        document.getElementById('result-output').style.display = 'block';
+      })
+      .catch(error => {
+        alert('❌ Error: ' + error.message);
+        document.getElementById('result-loading').style.display = 'none';
+        document.getElementById('result-default').style.display = 'block';
+      });
+    }
+
+    // ---- VEHICLE MANAGEMENT ----
+    let currentVehicleId = null;
+
+    function toggleAddVehicleForm() {
+      var form = document.getElementById('add-vehicle-form');
+      form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function addVehicle() {
+      var type = document.getElementById('new-vehicle-type').value;
+      var make = document.getElementById('new-vehicle-make').value;
+      var model = document.getElementById('new-vehicle-model').value;
+      var year = document.getElementById('new-vehicle-year').value;
+      var vin = document.getElementById('new-vehicle-vin').value;
+
+      if (!type || !make || !model || !year) {
+        alert('Please fill in all required fields');
+        return;
+      }
+
+      fetch('/vehicles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, make, model, year, vin })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          document.getElementById('new-vehicle-type').value = '';
+          document.getElementById('new-vehicle-make').value = '';
+          document.getElementById('new-vehicle-model').value = '';
+          document.getElementById('new-vehicle-year').value = '';
+          document.getElementById('new-vehicle-vin').value = '';
+          toggleAddVehicleForm();
+          loadVehicles();
+        } else {
+          alert('Error adding vehicle: ' + (data.message || 'Unknown error'));
+        }
+      })
+      .catch(e => alert('Error: ' + e.message));
+    }
+
+    function loadVehicles() {
+      fetch('/vehicles')
+        .then(r => r.json())
+        .then(data => {
+          var html = '';
+          var filterHtml = '<option value="">All Vehicles</option>';
+          var anomalyFilterHtml = '<option value="">All Vehicles</option>';
+          
+          if (data.vehicles && data.vehicles.length > 0) {
+            data.vehicles.forEach(v => {
+              var status = v.health_status || 'unknown';
+              
+              html += '<div class="vehicle-card">' +
+                '<div class="vehicle-header">' +
+                  '<span class="vehicle-title">' + v.type + '</span>' +
+                '</div>' +
+                '<div class="vehicle-info"><strong>Make:</strong> ' + v.make + '</div>' +
+                '<div class="vehicle-info"><strong>Model:</strong> ' + v.model + '</div>' +
+                '<div class="vehicle-info"><strong>Year:</strong> ' + v.year + '</div>' +
+                (v.vin ? '<div class="vehicle-info"><strong>VIN:</strong> ' + v.vin + '</div>' : '') +
+                '<div class="vehicle-actions">' +
+                  '<button onclick="showPage(\'predict\')">Predict Health</button>' +
+                  '<button onclick="deleteVehicle(' + v.id + ')">Delete</button>' +
+                '</div>' +
+                '</div>';
+              
+              filterHtml += '<option value="' + v.id + '">' + v.type + ' - ' + v.year + ' ' + v.make + '</option>';
+              anomalyFilterHtml += '<option value="' + v.id + '">' + v.type + ' - ' + v.year + ' ' + v.make + '</option>';
+            });
+          } else {
+            html = '<p style="text-align:center;color:#999;grid-column:1/-1;">No vehicles registered yet. Add one to get started!</p>';
+          }
+          
+          document.getElementById('vehicles-list').innerHTML = html;
+          document.getElementById('history-vehicle-filter').innerHTML = filterHtml;
+          document.getElementById('anomaly-vehicle-filter').innerHTML = anomalyFilterHtml;
+        })
+        .catch(e => console.error('Error loading vehicles:', e));
+    }
+
+    function deleteVehicle(id) {
+      if (!confirm('Delete this vehicle?')) return;
+      fetch('/vehicles/' + id, { method: 'DELETE' })
+        .then(r => r.json())
+        .then(data => { if (data.success) loadVehicles(); })
+        .catch(e => alert('Error: ' + e.message));
+    }
+
+    // ---- HISTORY PAGE ----
+    function loadHistory() {
+      var vehicleId = document.getElementById('history-vehicle-filter').value;
+      var endpoint = vehicleId ? ('/vehicle/' + vehicleId + '/history') : '/vehicle/1/history';
+      
+      fetch(endpoint)
+        .then(r => r.json())
+        .then(data => {
+          var tbody = document.getElementById('history-tbody');
+          var html = '';
+          
+          if (data.history && data.history.length > 0) {
+            data.history.slice(0, 20).reverse().forEach(h => {
+              var date = new Date(h.timestamp).toLocaleDateString() + ' ' + new Date(h.timestamp).toLocaleTimeString();
+              var status = h.predicted_km > 60000 ? '✓ Good' : h.predicted_km > 30000 ? '⚠ Service' : '🔴 Critical';
+              var statusColor = h.predicted_km > 60000 ? '#00ff88' : h.predicted_km > 30000 ? '#ffc800' : '#ff5050';
+              html += '<tr style="border-bottom: 1px solid rgba(0,198,255,0.1); hover: background rgba(0,198,255,0.05);">' +
+                '<td style="padding:12px; color: #ccc;">' + date + '</td>' +
+                '<td style="padding:12px; color: #ccc;">Vehicle ' + h.vehicle_id + '</td>' +
+                '<td style="padding:12px;"><strong style="color: #00c6ff;">' + h.predicted_km.toLocaleString() + ' km</strong></td>' +
+                '<td style="padding:12px; color:' + statusColor + '; font-weight: 600;">' + status + '</td>' +
+                '</tr>';
+            });
+          } else {
+            html = '<tr><td colspan="4" style="padding:20px;text-align:center;color:#999;">No prediction history yet.</td></tr>';
+          }
+          
+          tbody.innerHTML = html;
+          drawHistoryChart(data.history || []);
+        })
+        .catch(e => console.error('Error loading history:', e));
+    }
+
+    function drawHistoryChart(history) {
+      var canvas = document.getElementById('historyChart');
+      if (!canvas || history.length === 0) {
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#666';
+        ctx.font = '14px Poppins';
+        ctx.textAlign = 'center';
+        ctx.fillText('No data to display', canvas.width / 2, canvas.height / 2);
+        return;
+      }
+
+      var ctx = canvas.getContext('2d');
+      
+      // Get dimensions
+      var rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+
+      // Get last 10 predictions, reverse to chronological order
+      var data = history.slice(-10).reverse();
+      var values = data.map(h => h.predicted_km || 50000);
+      var labels = data.map(h => {
+        var date = new Date(h.timestamp);
+        return (date.getMonth() + 1) + '/' + date.getDate();
+      });
+
+      // Chart dimensions
+      var padding = 60;
+      var chartWidth = canvas.width - padding * 2;
+      var chartHeight = canvas.height - padding * 2;
+      var startX = padding;
+      var startY = padding;
+
+      // Calculate scale
+      var minValue = Math.min(...values);
+      var maxValue = Math.max(...values);
+      var range = maxValue - minValue;
+      if (range === 0) range = 10000; // If all values same, add buffer
+      var yScale = chartHeight / (range * 1.1);
+      var yMin = minValue - (range * 0.05);
+      var xStep = chartWidth / (data.length - 1 || 1);
+
+      // Background
+      ctx.fillStyle = 'rgba(0, 198, 255, 0.02)';
+      ctx.fillRect(startX, startY, chartWidth, chartHeight);
+      
+      // Draw grid lines
+      ctx.strokeStyle = 'rgba(0, 198, 255, 0.1)';
+      ctx.lineWidth = 1;
+      
+      // Horizontal grid lines and Y-axis labels
+      for (var i = 0; i <= 5; i++) {
+        var y = startY + (chartHeight / 5) * i;
+        ctx.beginPath();
+        ctx.moveTo(startX, y);
+        ctx.lineTo(startX + chartWidth, y);
+        ctx.stroke();
+        
+        var value = Math.round(maxValue - (range * 1.1 / 5) * i);
+        ctx.fillStyle = '#888';
+        ctx.font = 'bold 11px Poppins';
+        ctx.textAlign = 'right';
+        ctx.fillText(value.toLocaleString(), startX - 10, y + 4);
+      }
+
+      // Draw axes
+      ctx.strokeStyle = 'rgba(0, 198, 255, 0.4)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(startX, startY + chartHeight);
+      ctx.lineTo(startX + chartWidth, startY + chartHeight);
+      ctx.stroke();
+
+      // Draw data points and line
+      ctx.strokeStyle = 'rgba(0, 198, 255, 0.8)';
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      
+      var points = [];
+      var colors = [];
+      
+      for (var i = 0; i < data.length; i++) {
+        var x = startX + (i * xStep);
+        var y = startY + chartHeight - ((values[i] - yMin) * yScale);
+        points.push({x: x, y: y, value: values[i]});
+        
+        // Determine color based on health
+        if (values[i] > 60000) {
+          colors.push('#00ff88');
+        } else if (values[i] > 30000) {
+          colors.push('#ffc800');
+        } else {
+          colors.push('#ff5050');
+        }
+      }
+
+      // Draw line connecting points
+      if (points.length > 1) {
+        ctx.strokeStyle = 'rgba(0, 198, 255, 0.6)';
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for (var i = 1; i < points.length; i++) {
+          ctx.lineTo(points[i].x, points[i].y);
+        }
+        ctx.stroke();
+      }
+
+      // Draw points
+      for (var i = 0; i < points.length; i++) {
+        var p = points[i];
+        var color = colors[i];
+        
+        // Point shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y + 2, 6, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Point circle
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Point border
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // X-axis labels (dates)
+      ctx.fillStyle = '#888';
+      ctx.font = 'bold 11px Poppins';
+      ctx.textAlign = 'center';
+      for (var i = 0; i < labels.length; i++) {
+        var x = startX + (i * xStep);
+        var y = startY + chartHeight + 25;
+        ctx.fillText(labels[i], x, y);
+      }
+
+      // Axis labels
+      ctx.fillStyle = '#aaa';
+      ctx.font = 'bold 12px Poppins';
+      ctx.textAlign = 'center';
+      ctx.save();
+      ctx.translate(15, startY + chartHeight / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText('Remaining KM', 0, 0);
+      ctx.restore();
+
+      ctx.textAlign = 'center';
+      ctx.fillText('Days', startX + chartWidth / 2, canvas.height - 5);
+    }
+
+    // ---- ANALYSIS PAGE CHARTS ----
+    function initAnalysisCharts() {
+      fetchDatasetAndRender();
+    }
+
+    function fetchDatasetAndRender() {
+      fetch('/static/final_vehicle_dataset.csv')
+        .then(r => r.text())
+        .then(csv => {
+          var data = parseCSV(csv);
+          drawVehicleTypeChart(data);
+          drawHealthScoreChart(data);
+          drawMileageHealthChart(data);
+          drawMetricsByTypeChart(data);
+          drawFeatureUsageChart();
+        })
+        .catch(e => console.log('Charts will use sample data:', e));
+    }
+
+    function parseCSV(csv) {
+      var lines = csv.trim().split('\n');
+      var headers = lines[0].split(',').map(h => h.trim());
+      var data = [];
+      for (var i = 1; i < Math.min(lines.length, 101); i++) {
+        var obj = {};
+        var values = lines[i].split(',');
+        headers.forEach((h, idx) => obj[h] = values[idx] ? values[idx].trim() : '');
+        data.push(obj);
+      }
+      return data;
+    }
+
+    function drawVehicleTypeChart(data) {
+      var counts = {};
+      var colors = { 'SUV': '#00ff88', 'Sedan': '#00c6ff', 'Truck': '#ffc800', 'Hatchback': '#ff6b9d' };
+      data.forEach(d => {
+        counts[d.Vehicle_Type] = (counts[d.Vehicle_Type] || 0) + 1;
+      });
+      
+      var ctx = document.getElementById('chartVehicleType').getContext('2d');
+      var canvas = ctx.canvas;
+      var centerX = canvas.width / 2, centerY = canvas.height / 2, radius = 80;
+      var total = Object.values(counts).reduce((a, b) => a + b, 0);
+      var startAngle = 0;
+      var legend = '';
+
+      Object.keys(counts).forEach(type => {
+        var sliceAngle = (counts[type] / total) * 2 * Math.PI;
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, startAngle, startAngle + sliceAngle);
+        ctx.closePath();
+        ctx.fillStyle = colors[type] || '#00c6ff';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        startAngle += sliceAngle;
+        legend += '<div class="legend-item"><div class="legend-color" style="background:' + (colors[type] || '#00c6ff') + '"></div>' + type + ' (' + counts[type] + ')</div>';
+      });
+      document.getElementById('vehicleTypeLegend').innerHTML = legend;
+    }
+
+    function drawEngineTempChart(data) { /* removed */ }
+
+    function drawHealthScoreChart(data) {
+      var scores = data.map(d => parseFloat(d.Health_Score)).filter(s => s);
+      var bins = {}, binSize = 10;
+      scores.forEach(s => {
+        var bin = Math.floor(s / binSize) * binSize;
+        bins[bin] = (bins[bin] || 0) + 1;
+      });
+
+      var ctx = document.getElementById('chartHealthScore').getContext('2d');
+      var sorted = Object.keys(bins).sort((a, b) => a - b);
+      var maxCount = Math.max(...Object.values(bins));
+      var startX = 30, chartWidth = ctx.canvas.width - 60, chartHeight = ctx.canvas.height - 60;
+
+      ctx.fillStyle = '#444';
+      ctx.fillRect(startX, chartHeight, chartWidth, 1);
+      ctx.fillRect(startX, 20, 1, chartHeight - 20);
+
+      sorted.forEach((bin, idx) => {
+        var x = startX + (idx * chartWidth / sorted.length);
+        var barHeight = (bins[bin] / maxCount) * (chartHeight - 40);
+        var hue = (bin / 100) * 120;
+        ctx.fillStyle = 'hsl(' + hue + ', 100%, 50%)';
+        ctx.fillRect(x + 5, chartHeight - barHeight, chartWidth / sorted.length - 10, barHeight);
+      });
+
+      ctx.fillStyle = '#aaa';
+      ctx.font = 'bold 12px Poppins';
+      ctx.fillText('Health Score (0-100)', 10, ctx.canvas.height - 20);
+    }
+
+    function drawFuelConsumptionChart(data) { /* removed */ }
+
+    function drawServiceMonthsChart(data) { /* removed */ }
+
+    function drawMileageHealthChart(data) {
+      var points = data.map(d => ({x: parseFloat(d.Mileage), y: parseFloat(d.Health_Score)})).filter(p => p.x && p.y);
+      var ctx = document.getElementById('chartMileageHealth').getContext('2d');
+      var startX = 30, startY = ctx.canvas.height - 30, chartWidth = ctx.canvas.width - 60, chartHeight = ctx.canvas.height - 60;
+      var maxMileage = Math.max(...points.map(p => p.x));
+      var maxHealth = 100;
+
+      ctx.fillStyle = '#444';
+      ctx.fillRect(startX, startY, chartWidth, 1);
+      ctx.fillRect(startX, startY - chartHeight, 1, chartHeight);
+
+      points.forEach(p => {
+        var px = startX + (p.x / maxMileage) * chartWidth;
+        var py = startY - (p.y / maxHealth) * chartHeight;
+        ctx.fillStyle = p.y > 60 ? '#00ff88' : p.y > 30 ? '#ffc800' : '#ff5050';
+        ctx.beginPath();
+        ctx.arc(px, py, 4, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      ctx.fillStyle = '#999';
+      ctx.font = '10px Poppins';
+      ctx.textAlign = 'center';
+      ctx.fillText('Mileage', startX + chartWidth / 2, ctx.canvas.height - 5);
+      ctx.textAlign = 'left';
+      ctx.fillText('Health Score', 10, startY - chartHeight / 2);
+    }
+
+    function drawTireConditionChart(data) { /* removed */ }
+
+    function drawMetricsByTypeChart(data) {
+      var typeMetrics = {};
+      data.forEach(d => {
+        if (!typeMetrics[d.Vehicle_Type]) typeMetrics[d.Vehicle_Type] = { temp: [], fuel: [] };
+        typeMetrics[d.Vehicle_Type].temp.push(parseFloat(d.Engine_Temp));
+        typeMetrics[d.Vehicle_Type].fuel.push(parseFloat(d.Fuel_Consumption));
+      });
+
+      var types = Object.keys(typeMetrics);
+      var ctx = document.getElementById('chartMetricsByType').getContext('2d');
+      var startX = 40, barWidth = (ctx.canvas.width - 80) / (types.length * 2), chartHeight = ctx.canvas.height - 60;
+      var maxTemp = 110, maxFuel = 16;
+
+      types.forEach((type, idx) => {
+        var avgTemp = typeMetrics[type].temp.reduce((a, b) => a + b) / typeMetrics[type].temp.length;
+        var avgFuel = typeMetrics[type].fuel.reduce((a, b) => a + b) / typeMetrics[type].fuel.length;
+
+        // Temperature bar
+        var tempHeight = (avgTemp / maxTemp) * (chartHeight - 40);
+        ctx.fillStyle = '#ff6b6b';
+        ctx.fillRect(startX + idx * barWidth * 2, chartHeight - tempHeight, barWidth - 5, tempHeight);
+
+        // Fuel bar
+        var fuelHeight = (avgFuel / maxFuel) * (chartHeight - 40);
+        ctx.fillStyle = '#ffc800';
+        ctx.fillRect(startX + idx * barWidth * 2 + barWidth, chartHeight - fuelHeight, barWidth - 5, fuelHeight);
+
+        ctx.fillStyle = '#999';
+        ctx.font = '9px Poppins';
+        ctx.textAlign = 'center';
+        ctx.fillText(type, startX + idx * barWidth * 2 + barWidth, ctx.canvas.height - 10);
+      });
+
+      var legend = '<div class="legend-item"><div class="legend-color" style="background:#ff6b6b"></div>Avg Temp (°C)</div><div class="legend-item"><div class="legend-color" style="background:#ffc800"></div>Avg Fuel (L/100km)</div>';
+      document.getElementById('fuelConsumptionLegend').innerHTML = legend;
+    }
+
+    function drawFeatureUsageChart() {
+      var features = [
+        { name: 'Vehicle_Type', usage: 100, color: '#00ff88' },
+        { name: 'Vehicle_Age', usage: 95, color: '#00c6ff' },
+        { name: 'Mileage', usage: 98, color: '#ffc800' },
+        { name: 'Engine_Temp', usage: 100, color: '#ff6b9d' },
+        { name: 'RPM', usage: 92, color: '#00d4ff' },
+        { name: 'Oil_Pressure', usage: 99, color: '#ff9500' },
+        { name: 'Fuel_Consumption', usage: 88, color: '#5bff00' },
+        { name: 'Battery_Voltage', usage: 85, color: '#00ffff' },
+        { name: 'Brake_Pressure', usage: 90, color: '#ff6b6b' },
+        { name: 'Tire_Pressure', usage: 87, color: '#ff1493' },
+        { name: 'Tire_Condition', usage: 80, color: '#00ff99' },
+        { name: 'Vibration_Level', usage: 97, color: '#ff3366' },
+        { name: 'Last_Service_Months', usage: 82, color: '#00ffcc' },
+        { name: 'Accident_History', usage: 75, color: '#ffaa00' }
+      ];
+
+      var ctx = document.getElementById('chartFeatureUsage').getContext('2d');
+      var startX = 120, barHeight = (ctx.canvas.height - 60) / features.length;
+      var maxWidth = ctx.canvas.width - startX - 20;
+
+      // Draw title
+      ctx.fillStyle = '#00c6ff';
+      ctx.font = 'bold 14px Poppins';
+      ctx.textAlign = 'left';
+      ctx.fillText('14 ML Model Features', 10, 25);
+
+      features.forEach((feature, idx) => {
+        var y = 40 + idx * barHeight;
+        var barWidth = (feature.usage / 100) * maxWidth;
+
+        // Bar background
+        ctx.fillStyle = 'rgba(0,198,255,0.1)';
+        ctx.fillRect(startX, y, maxWidth, barHeight - 3);
+
+        // Bar fill
+        ctx.fillStyle = feature.color;
+        ctx.fillRect(startX, y, barWidth, barHeight - 3);
+
+        // Feature name
+        ctx.fillStyle = '#ccc';
+        ctx.font = '11px Poppins';
+        ctx.textAlign = 'right';
+        ctx.fillText(feature.name, startX - 5, y + barHeight / 2 + 4);
+
+        // Percentage
+        ctx.fillStyle = '#00ff88';
+        ctx.font = 'bold 11px Poppins';
+        ctx.textAlign = 'left';
+        ctx.fillText(feature.usage + '%', startX + barWidth + 5, y + barHeight / 2 + 4);
+      });
+
+      // Legend
+      var legend = '<div class="legend-item"><div class="legend-color" style="background:#00ff88"></div>Feature Importance in Model</div>';
+      document.getElementById('featureUsageLegend').innerHTML = legend;
+    }
+
+    // ---- FEATURE CHARTS ----
+
+    // ---- PAGE INITIALIZATION ----
+    function initPages() {
+      loadVehicles();
+      loadHistory();
+      initAnalysisCharts();
+    }
+
+    // Initialize on page load
+    window.addEventListener('load', initPages);
+
+    document.addEventListener('wheel', function() {
+      if (document.activeElement.type === 'number') document.activeElement.blur();
+    });
+  </script>
 </body>
 </html>

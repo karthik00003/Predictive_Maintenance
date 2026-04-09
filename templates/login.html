@@ -1,186 +1,295 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="myApp">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login / Signup</title>
+
+<!-- AngularJS CDN -->
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+
 <style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Poppins', sans-serif;
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',sans-serif;
 }
 
-body {
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: linear-gradient(135deg, #6a11cb, #2575fc);
+body{
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+overflow:hidden;
 }
 
-/* Container */
-.container {
-    width: 420px; /* ⭐ wider to prevent edge visibility */
-    overflow: hidden;
-    border-radius: 20px;
-    background: rgba(255,255,255,0.1);
-    backdrop-filter: blur(15px);
-    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-    padding: 30px;
-    color: white;
-    animation: fadeIn 0.8s ease-in-out;
+/* VIDEO BACKGROUND */
+.video-bg{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+z-index:-1;
 }
 
-/* Tabs */
-.tabs {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 25px; /* ⭐ more space */
+.video-bg video{
+width:100%;
+height:100%;
+object-fit:cover;
 }
 
-.tabs button {
-    width: 48%;
-    padding: 10px;
-    border: none;
-    background: transparent;
-    color: white;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: background 0.3s ease;
+/* OVERLAY */
+.overlay{
+position:absolute;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.4);
 }
 
-.tabs button:hover {
-    background: rgba(255,255,255,0.1);
+/* FORM BOX */
+.form-box{
+width:420px;
+padding:50px 40px;
+background:rgba(255,255,255,0.1);
+backdrop-filter:blur(20px);
+border-radius:20px;
+color:white;
+text-align:center;
+perspective:1000px;
+animation: float 4s ease-in-out infinite;
 }
 
-.tabs button.active {
-    border-bottom: 2px solid white;
+/* FLOAT */
+@keyframes float{
+0%{transform:translateY(0);}
+50%{transform:translateY(-12px);}
+100%{transform:translateY(0);}
 }
 
-/* Sliding wrapper */
-.form-wrapper {
-    display: flex;
-    width: 100%;
+/* FLIP BOX */
+.flip-box{
+position:relative;
+width:100%;
+height:320px;
+transform-style:preserve-3d;
+transition: transform 1s ease-in-out;
 }
 
-/* Each form */
-.form {
-    width: 100%;
-    padding: 10px 20px; /* ⭐ spacing inside */
+.flip{
+transform:rotateY(180deg);
 }
 
-/* Inputs */
-.input-box {
-    margin-bottom: 18px; /* ⭐ spacing between fields */
+/* FORMS */
+.form{
+position:absolute;
+width:100%;
+top:0;
+left:0;
+backface-visibility:hidden;
 }
 
-.input-box input {
-    width: 100%;
-    padding: 12px;
-    border-radius: 10px;
-    border: none;
-    background: rgba(255,255,255,0.2);
-    color: white;
-    transition: background 0.3s ease;
+.signup{
+transform:rotateY(180deg);
 }
 
-.input-box input:focus {
-    background: rgba(255,255,255,0.3);
-    outline: none;
+/* TITLE */
+h2{
+margin-bottom:20px;
 }
 
-/* Button */
-.submit-btn {
-    width: 100%;
-    padding: 12px;
-    border-radius: 10px;
-    border: none;
-    background: linear-gradient(90deg, #9b59b6, #6a11cb);
-    color: white;
-    cursor: pointer;
-    transition: background 0.3s ease;
+/* INPUTS */
+.input-box{
+margin:15px 0;
 }
 
-.submit-btn:hover {
-    background: linear-gradient(90deg, #8a49a6, #5a0fc8);
+.input-box input{
+width:100%;
+padding:12px;
+border:none;
+border-radius:8px;
+background:rgba(255,255,255,0.2);
+color:white;
+outline:none;
 }
 
-/* Title */
-h2 {
-    text-align: center;
-    margin-bottom: 15px; /* ⭐ more space */
+.input-box input::placeholder{
+color:#ddd;
 }
 
-.brand {
-    text-align: center;
-    margin-bottom: 10px;
+/* BUTTON */
+button{
+width:100%;
+padding:12px;
+margin-top:10px;
+border:none;
+border-radius:8px;
+background:#00c6ff;
+color:white;
+font-weight:bold;
+cursor:pointer;
+transition:0.3s;
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+button:hover{
+background:#0072ff;
+}
+
+/* TOGGLE */
+.toggle{
+margin-top:15px;
+font-size:14px;
+cursor:pointer;
+color:#ccc;
+}
+
+.toggle span{
+color:#00c6ff;
+font-weight:bold;
 }
 </style>
+</head>
 
-<body>
-    <div class="container">
-        <div class="brand">
-            <h1>Vehicle Predictive Maintenance</h1>
-        </div>
-        <div class="tabs">
-            <button class="tab-btn active" onclick="showForm('login')">Login</button>
-            <button class="tab-btn" onclick="showForm('signup')">Sign Up</button>
-        </div>
-        <div class="form-wrapper" id="formWrapper">
-            <!-- Login Form -->
-            <form class="form" id="loginForm" action="/login" method="POST">
-                <h2>Login</h2>
-                {% if error %}
-                <p style="color: red; text-align: center;">{{ error }}</p>
-                {% endif %}
-                <div class="input-box">
-                    <input type="text" name="username" placeholder="Username" required>
-                </div>
-                <div class="input-box">
-                    <input type="password" name="password" placeholder="Password" required>
-                </div>
-                <button type="submit" class="submit-btn">Login</button>
-            </form>
-            <!-- Signup Form -->
-            <form class="form" id="signupForm" action="/signup" method="POST" style="display: none;">
-                <h2>Sign Up</h2>
-                <div class="input-box">
-                    <input type="text" name="username" placeholder="Username" required>
-                </div>
-                <div class="input-box">
-                    <input type="password" name="password" placeholder="Password" required>
-                </div>
-                <button type="submit" class="submit-btn">Sign Up</button>
-            </form>
-        </div>
-    </div>
+<body ng-controller="myCtrl">
 
-    <script>
-        function showForm(formType) {
-            const loginForm = document.getElementById('loginForm');
-            const signupForm = document.getElementById('signupForm');
-            const loginBtn = document.querySelector('.tab-btn:nth-child(1)');
-            const signupBtn = document.querySelector('.tab-btn:nth-child(2)');
+<!-- VIDEO -->
+<div class="video-bg">
+<video autoplay muted loop>
+<source src="../static/bg.mp4" type="video/mp4">
+</video>
+<div class="overlay"></div>
+</div>
 
-            if (formType === 'login') {
-                loginForm.style.display = 'block';
-                signupForm.style.display = 'none';
-                loginBtn.classList.add('active');
-                signupBtn.classList.remove('active');
-            } else {
-                loginForm.style.display = 'none';
-                signupForm.style.display = 'block';
-                signupBtn.classList.add('active');
-                loginBtn.classList.remove('active');
-            }
-        }
-    </script>
+<!-- FORM -->
+<div class="form-box">
+
+<div class="flip-box" ng-class="{'flip': isFlipped}">
+
+<!-- LOGIN -->
+<div class="form login">
+<form ng-submit="handleLogin()" name="loginForm">
+	<h2>Login</h2>
+
+	<div ng-if="loginError" style="color: #ff4d4d; margin-bottom: 10px; font-weight: bold;">{% raw %}{{ loginError }}{% endraw %}</div>
+
+	<div class="input-box">
+		<input type="text" name="username" placeholder="Email" ng-model="loginUsername" required>
+	</div>
+
+	<div class="input-box">
+		<input type="password" name="password" placeholder="Password" ng-model="loginPassword" required>
+	</div>
+
+	<button type="submit" ng-disabled="isLoggingIn">{% raw %}{{ isLoggingIn ? 'Logging in...' : 'Login' }}{% endraw %}</button>
+</form>
+
+<p class="toggle" ng-click="toggleForm()">Don't have an account? <span>Sign Up</span></p>
+</div>
+
+<!-- SIGNUP -->
+<div class="form signup">
+<form ng-submit="handleSignup()" name="signupForm">
+<h2>Sign Up</h2>
+
+<div ng-if="signupError" style="color: #ff4d4d; margin-bottom: 10px; font-weight: bold;">{% raw %}{{ signupError }}{% endraw %}</div>
+
+<div class="input-box">
+<input type="email" name="username" placeholder="Email" ng-model="signupUsername" required>
+</div>
+
+<div class="input-box">
+<input type="password" name="password" placeholder="Password" ng-model="signupPassword" required>
+</div>
+
+<button type="submit" ng-disabled="isSigningUp">{% raw %}{{ isSigningUp ? 'Creating...' : 'Create Account' }}{% endraw %}</button>
+</form>
+
+<p class="toggle" ng-click="toggleForm()">Already have an account? <span>Login</span></p>
+</div>
+
+</div>
+
+</div>
+
+<script>
+angular.module("myApp", [])
+.controller("myCtrl", function($scope, $http){
+
+$scope.isFlipped = false;
+$scope.loginError = null;
+$scope.isLoggingIn = false;
+$scope.signupError = null;
+$scope.isSigningUp = false;
+
+$scope.toggleForm = function(){
+$scope.isFlipped = !$scope.isFlipped;
+};
+
+$scope.handleLogin = function(){
+	if (!$scope.loginUsername || !$scope.loginPassword) {
+		$scope.loginError = "Please fill in all fields";
+		return;
+	}
+
+	$scope.isLoggingIn = true;
+	$scope.loginError = null;
+
+	// Serialize form data
+	var formData = 'username=' + encodeURIComponent($scope.loginUsername) + 
+	               '&password=' + encodeURIComponent($scope.loginPassword);
+
+	$http({
+		method: 'POST',
+		url: '/login',
+		data: formData,
+		headers: {
+			'Content-Type': 'application/x-www-form-urlencoded',
+			'X-Requested-With': 'XMLHttpRequest'
+		}
+	}).then(function(response) {
+		// Success - redirect to home
+		window.location.href = response.data.redirect;
+	}, function(error) {
+		// Error - show error message
+		$scope.loginError = error.data.error || 'Login failed';
+		$scope.isLoggingIn = false;
+	});
+};
+
+$scope.handleSignup = function(){
+	if (!$scope.signupUsername || !$scope.signupPassword) {
+		$scope.signupError = "Please fill in all fields";
+		return;
+	}
+
+	$scope.isSigningUp = true;
+	$scope.signupError = null;
+
+	// Serialize form data
+	var formData = 'username=' + encodeURIComponent($scope.signupUsername) + 
+	               '&password=' + encodeURIComponent($scope.signupPassword);
+
+	$http({
+		method: 'POST',
+		url: '/signup',
+		data: formData,
+		headers: {
+			'Content-Type': 'application/x-www-form-urlencoded',
+			'X-Requested-With': 'XMLHttpRequest'
+		}
+	}).then(function(response) {
+		// Success - redirect to home
+		window.location.href = response.data.redirect;
+	}, function(error) {
+		// Error - show error message
+		$scope.signupError = error.data.error || 'Signup failed';
+		$scope.isSigningUp = false;
+	});
+};
+
+});
+</script>
+
 </body>
 </html>

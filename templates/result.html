@@ -4,27 +4,116 @@
 <title>Prediction Result</title>
 
 <style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',sans-serif;
+}
+
+/* VIDEO BACKGROUND */
+.video-bg{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+object-fit:cover;
+z-index:-2;
+}
+
+/* OVERLAY */
+.overlay{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.55);
+z-index:-1;
+}
+
+/* NAVBAR */
+.navbar{
+position:fixed;
+top:0;
+width:100%;
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:15px 50px;
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(15px);
+border-bottom:1px solid rgba(255,255,255,0.1);
+color:white;
+z-index:100;
+}
+
+.logo{
+font-size:22px;
+font-weight:bold;
+background:linear-gradient(135deg,#00c6ff,#0072ff);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+}
+
+.menu{display:flex;gap:30px;}
+
+.menu a{
+text-decoration:none;
+color:#ffffff;
+padding:8px 18px;
+border-radius:12px;
+cursor:pointer;
+transition:0.3s;
+}
+
+.menu a:hover{
+color:white;
+background:rgba(255,255,255,0.08);
+}
+
+.menu a.active{
+background:linear-gradient(135deg,#00c6ff,#0072ff);
+color:white;
+box-shadow:0 0 10px rgba(0,198,255,0.7);
+}
+
+.right{display:flex;align-items:center;gap:15px;}
+
+.login-btn{padding:8px 18px;border-radius:20px;background:linear-gradient(135deg,#00c6ff,#0072ff);color:white;text-decoration:none;font-weight:600;transition:0.3s;box-shadow:0 0 10px rgba(0,198,255,0.6);}
+
+.login-btn:hover{transform:scale(1.05);box-shadow:0 0 20px rgba(0,198,255,1);}
+
 body{
-    font-family:Arial;
-    background:#f4f6f8;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
     padding:40px;
     text-align:center;
+    color:white;
 }
 
 .container{
-    max-width:600px;
-    margin:auto;
-    background:white;
+    width:100%;
+    max-width:700px;
+    margin:0 auto;
+    background:rgba(255,255,255,0.1);
+    backdrop-filter:blur(20px);
     padding:30px;
     border-radius:10px;
     box-shadow:0 0 10px rgba(0,0,0,0.1);
+    color:white;
 }
 
 .result-box{
     margin:20px 0;
     padding:15px;
     border-radius:8px;
-    background:#eef4ff;
+    background:rgba(255,255,255,0.1);
+    backdrop-filter:blur(10px);
 }
 
 .back{
@@ -32,15 +121,38 @@ body{
     display:inline-block;
     margin-top:20px;
     margin-right:10px;
-    color:#0d6efd;
+    color:#00c6ff;
 }
+
 </style>
 
 </head>
 
 <body>
 
-<div class="container">
+<!-- VIDEO -->
+<video class="video-bg" autoplay muted loop playsinline>
+<source src="{{ url_for('static', filename='bg.mp4') }}" type="video/mp4">
+Your browser does not support the video tag.
+</video>
+
+<div class="overlay"></div>
+
+<!-- NAVBAR -->
+<div class="navbar">
+  <div class="logo">AI Predict</div>
+  <div class="menu">
+    <a href="/home?page=home">Home</a>
+    <a href="/predict_page" class="active">Predict</a>
+    <a href="/home?page=analysis">Analysis</a>
+    <a href="/home?page=features">About us</a>
+  </div>
+  <div class="right">
+    <a href="/logout" class="login-btn">Logout</a>
+  </div>
+</div>
+
+<div class="container" style="margin-top:90px;">
 
 <h2>Vehicle Health Prediction Result</h2>
 
@@ -61,7 +173,6 @@ body{
 {% endif %}
 
 <a href="/predict_page" class="back">← Predict Again</a>
-<a href="/home" class="back">← Back to Home</a>
 
 </div>
 

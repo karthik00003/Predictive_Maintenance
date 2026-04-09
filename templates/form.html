@@ -1,193 +1,398 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Vehicle Prediction</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehi Care | Predictive Dashboard</title>
+    
+    <style>
+        /* --- CORE STYLES --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
 
-<style>
+        body {
+            background: #050505;
+            color: #ffffff;
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
 
-body{
-font-family:Segoe UI;
-background:#f4f6f8;
-padding:40px;
-position:static;
-}
+        /* --- BACKGROUND VIDEO --- */
+        .video-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -2;
+        }
 
-.container{
-max-width:600px;
-margin:auto;
-background:white;
-padding:30px;
-border-radius:12px;
-box-shadow:0 0 15px rgba(0,0,0,0.1);
-position:relative;
-}
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7); /* Lighter for a modern look */
+            z-index: -1;
+        }
 
-h2{
-text-align:center;
-margin-bottom:20px;
-color:#0d6efd;
-}
+        /* --- MODERN NAVBAR --- */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 60px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(25px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            z-index: 1000;
+        }
 
-label{
-font-weight:600;
-display:block;
-margin-top:10px;
-}
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #00c6ff, #0072ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+        }
 
-.range{
-color:gray;
-font-weight:normal;
-font-size:14px;
-}
+        .menu a {
+            text-decoration: none;
+            color: rgba(255,255,255,0.7);
+            margin: 0 15px;
+            padding: 8px 15px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
 
-input,select{
-width:100%;
-padding:10px;
-margin:6px 0 12px 0;
-border-radius:6px;
-border:1px solid #ccc;
-}
+        .menu a:hover, .menu a.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.08);
+        }
 
-/* Hide number input spinners to prevent scroll changes */
-input[type="number"]::-webkit-outer-spin-button,
-input[type="number"]::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
+        .login-btn {
+            padding: 10px 25px;
+            border-radius: 30px;
+            background: linear-gradient(135deg, #00c6ff, #0072ff);
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            box-shadow: 0 0 15px rgba(0, 198, 255, 0.4);
+        }
 
-input[type="number"] {
-  -moz-appearance: textfield;
-  appearance: textfield;
-}
+        /* --- FULL-SCREEN FORM DASHBOARD --- */
+        .dashboard {
+            margin-top: 100px;
+            flex: 1;
+            padding: 40px 60px;
+            display: flex;
+            flex-direction: column;
+        }
 
-button{
-width:100%;
-padding:12px;
-background:#0d6efd;
-color:white;
-border:none;
-border-radius:6px;
-font-size:16px;
-cursor:pointer;
-}
+        .dashboard-header {
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-button:hover{
-background:#084298;
-}
+        .dashboard-title { font-size: 32px; font-weight: 700; letter-spacing: -1px; }
+        .dashboard-subtitle { color: #aaa; margin-top: 5px; font-size: 16px; }
 
-.back{
-text-decoration:none;
-color:#0d6efd;
-font-size:14px;
-}
+        .dashboard-meta { text-align: right; }
+        .dashboard-meta span { display: block; }
+        .dashboard-status { font-weight: bold; color: #00ff88; font-size: 14px; }
+        .dashboard-context { color: #888; font-size: 12px; }
 
-</style>
+        /* Form Layout: Main content on left, result card on right */
+        .form-layout {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+        }
 
+        /* Grid for cards containing input fields */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+        }
+
+        /* Standard Card Style */
+        .card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(15px);
+            padding: 25px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(0, 198, 255, 0.3);
+        }
+
+        .card-header { margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .card-icon { font-size: 24px; color: #00c6ff; }
+        .card h3 { font-size: 20px; color: #eee; }
+
+        /* Input Group Styles */
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; color: #ccc; }
+        .range { color: #00c6ff; font-weight: 400; font-size: 12px; margin-left: 5px; }
+
+        /* Modern Input styling */
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.4);
+            color: white;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        input::placeholder { color: #666; }
+        select { appearance: none; cursor: pointer; }
+        select option { background: #1a1a1a; color: white; }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #0072ff;
+            background: rgba(0, 0, 0, 0.6);
+            box-shadow: 0 0 10px rgba(0, 198, 255, 0.2);
+        }
+
+        /* Group for side-by-side inputs (e.g. pressure) */
+        .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+        /* --- PREDICT BUTTON --- */
+        .predict-container { text-align: center; margin-top: 40px; margin-bottom: 30px;}
+        
+        .predict-btn {
+            padding: 16px 50px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(135deg, #00c6ff, #0072ff);
+            border: none;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(0, 198, 255, 0.5);
+            letter-spacing: 1px;
+        }
+
+        .predict-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0, 198, 255, 0.7);
+        }
+
+        /* --- RIGHT SIDE: RESULTS / STATS CARD --- */
+        .result-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: sticky;
+            top: 100px; /* Sticks with navbar */
+            height: calc(100vh - 120px);
+        }
+
+        .result-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 198, 255, 0.15);
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .result-card h3 { color: #00c6ff; font-size: 16px; margin-bottom: 10px; }
+        .result-value { font-size: 36px; font-weight: 700; color: #eee; }
+        .result-unit { font-size: 18px; color: #aaa; margin-left: 5px;}
+
+        /* Hide default spin-buttons */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] { -moz-appearance: textfield; }
+
+    </style>
 </head>
 
 <body>
 
-<div class="container">
+    <video class="video-bg" autoplay muted loop playsinline>
+        <source src="{{ url_for('static', filename='bg.mp4') }}" type="video/mp4">
+    </video>
+    <div class="overlay"></div>
 
-<a href="/" class="back">← Back to Home</a>
+    <nav class="navbar">
+        <div class="logo">VEHI CARE</div>
+        <div class="menu">
+            <a href="/home?page=home">Home</a>
+            <a href="/predict_page" class="active">Predict</a>
+            <a href="/home?page=analysis">Analysis</a>
+            <a href="/home?page=features">About Us</a>
+        </div>
+        <div class="right">
+            <a href="/logout" class="login-btn">Logout</a>
+        </div>
+    </nav>
 
-<h2>Vehicle Health Prediction</h2>
+    <main class="dashboard">
+        <header class="dashboard-header">
+            <div>
+                <h1 class="dashboard-title">Prediction Dashboard</h1>
+                <p class="dashboard-subtitle">Perform vehicle checks while running at <b>Idle</b>.</p>
+            </div>
+            <div class="dashboard-meta">
+                <span class="dashboard-status">Ready to Monitor</span>
+                <span class="dashboard-context">All input parameters are required.</span>
+            </div>
+        </header>
 
-<form action="/predict" method="post" autocomplete="off">
+        <form action="/predict" method="post" autocomplete="off" class="form-layout">
+            
+            <div class="cards-grid">
+                
+                <div class="card">
+                    <div class="card-header"><span class="icon">🚗</span><h3>General Specs</h3></div>
+                    <div class="input-group">
+                        <label>Vehicle Type</label>
+                        <select name="Vehicle_Type" required>
+                            <option value="" disabled selected>Select vehicle model</option>
+                            <option value="Hatchback">Hatchback</option>
+                            <option value="Sedan">Sedan</option>
+                            <option value="SUV">SUV</option>
+                            <option value="Truck">Truck</option>
+                        </select>
+                    </div>
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Age <span class="range">(0 – 15 y)</span></label>
+                            <input type="number" name="Vehicle_Age" placeholder="5" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Service <span class="range">(0 – 12 mo)</span></label>
+                            <input type="number" name="Last_Service_Months" required>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Total Mileage <span class="range">(0 – 350,000 km)</span></label>
+                        <input type="number" name="Mileage" placeholder="e.g. 45000" required>
+                    </div>
+                </div>
 
-<label>Vehicle Type</label>
-<select name="Vehicle_Type" required>
-<option>Hatchback</option>
-<option>Sedan</option>
-<option>SUV</option>
-<option>Truck</option>
-</select>
+                <div class="card">
+                    <div class="card-header"><span class="icon">🔧</span><h3>Engine Vitals (Idle)</h3></div>
+                    <div class="input-group">
+                        <label>Idle RPM <span class="range">(700 – 1000)</span></label>
+                        <input type="number" name="RPM" placeholder="RPM at rest" required>
+                    </div>
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Temp <span class="range">(80 – 105 °C)</span></label>
+                            <input type="number" name="Engine_Temp" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Oil PSI <span class="range">(25 – 45)</span></label>
+                            <input type="number" name="Oil_Pressure" required>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Fuel Consumption <span class="range">(5 – 20 km/l)</span></label>
+                        <input type="number" step="0.1" name="Fuel_Consumption" required>
+                    </div>
+                </div>
 
-<label>Vehicle Age <span class="range">(0 – 15 years)</span></label>
-<input type="number" name="Vehicle_Age" required>
+                <div class="card">
+                    <div class="card-header"><span class="icon">⚡</span><h3>Electrical & Safety</h3></div>
+                    <div class="input-group">
+                        <label>Battery Voltage <span class="range">(12 – 14.5 V)</span></label>
+                        <input type="number" step="0.01" name="Battery_Voltage" placeholder="Check idling" required>
+                    </div>
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Brake PSI <span class="range">(30 – 45)</span></label>
+                            <input type="number" name="Brake_Pressure" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Tire PSI <span class="range">(30 – 35)</span></label>
+                            <input type="number" name="Tire_Pressure" required>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Accident History</label>
+                        <select name="Accident_History">
+                            <option value="No">No Previous Accidents</option>
+                            <option value="Yes">Has Accident History</option>
+                        </select>
+                    </div>
+                </div>
 
-<label>Mileage <span class="range">(0 – 350000 km)</span></label>
-<input type="number" name="Mileage" required>
+                <div class="card">
+                    <div class="card-header"><span class="icon">👁️</span><h3>Sensory Analysis</h3></div>
+                    <div class="input-group">
+                        <label>Tire Condition</label>
+                        <select name="Tire_Condition">
+                            <option value="Good">Good</option>
+                            <option value="Moderate">Moderate</option>
+                            <option value="Worn">Worn</option>
+                            <option value="Critical">Critical</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Idle Vibration Level</label>
+                        <select name="Vibration_Level">
+                            <option value="Low">Low (Stable)</option>
+                            <option value="Medium">Medium (Slight shaking)</option>
+                            <option value="High">High (Rough idle)</option>
+                        </select>
+                    </div>
+                    <p style="font-size: 13px; color: #777; margin-top: 15px;">
+                        Ensure the engine is at normal operating temperature before reading vital signs.
+                    </p>
+                </div>
 
-<label>Engine Temperature <span class="range">(88 – 110 °C)</span></label>
-<input type="number" name="Engine_Temp" required>
+            </div> <aside class="result-panel">
+                <div class="result-card" style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+                    <h3>Predicted Remaining Useful Life</h3>
+                    <div class="result-value">---</div> 
+                    <p style="color: #666; margin-top: 10px; font-size: 13px;">Submit your sensor data to calculate kilometers remaining before potential failure.</p>
+                </div>
 
-<label>RPM <span class="range">(1500 – 3000)</span></label>
-<input type="number" name="RPM" required>
+                <button type="submit" class="predict-btn">Calculate Remaining KM</button>
+            </aside>
 
-<label>Oil Pressure <span class="range">(25 – 45 PSI)</span></label>
-<input type="number" name="Oil_Pressure" required>
+        </form>
+    </main>
 
-<label>Fuel Consumption <span class="range">(5 – 20 km/l)</span></label>
-<input type="number" step="0.1" name="Fuel_Consumption" required>
-
-<label>Battery Voltage <span class="range">(11 – 13 V)</span></label>
-<input type="number" step="0.01" name="Battery_Voltage" required>
-
-<label>Brake Pressure <span class="range">(30 – 45)</span></label>
-<input type="number" name="Brake_Pressure" required>
-
-<label>Tire Pressure <span class="range">(30 – 110 PSI)</span></label>
-<input type="number" name="Tire_Pressure" required>
-
-<label>Tire Condition</label>
-<select name="Tire_Condition">
-<option>Good</option>
-<option>Moderate</option>
-<option>Worn</option>
-<option>Critical</option>
-</select>
-
-<label>Vibration Level</label>
-<select name="Vibration_Level">
-<option>Low</option>
-<option>Medium</option>
-<option>High</option>
-</select>
-
-<label>Months Since Last Service <span class="range">(1 – 12)</span></label>
-<input type="number" name="Last_Service_Months" required>
-
-<label>Accident History</label>
-<select name="Accident_History">
-<option>No</option>
-<option>Yes</option>
-</select>
-
-<button type="submit">Predict Remaining KM</button>
-
-</form>
-
-</div>
-
-<script>
-// Comprehensive fix to prevent input value changes on scroll
-document.addEventListener('DOMContentLoaded', function() {
-    const formFields = document.querySelectorAll('input, select');
-    
-    // Disable autocomplete
-    formFields.forEach(field => {
-        field.setAttribute('autocomplete', 'off');
-    });
-    
-    // Prevent input from changing on mouse wheel/scroll
-    formFields.forEach(field => {
-        field.addEventListener('wheel', function(e) {
-            if (this.type === 'number') {
-                e.preventDefault();
-                return false;
-            }
-        }, {passive: false});
-        
-        // Also prevent arrow key increments in number inputs
-        field.addEventListener('keydown', function(e) {
-            if (this.type === 'number' && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
-                e.preventDefault();
+    <script>
+        // Disabling scroll changing values on number inputs
+        document.addEventListener('wheel', function(e) {
+            if (document.activeElement.type === 'number') {
+                document.activeElement.blur();
             }
         });
-    });
-});
-</script>
+    </script>
 
 </body>
 </html>
