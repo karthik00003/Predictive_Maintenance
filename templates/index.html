@@ -842,6 +842,9 @@
   </main>
 
   <script>
+    // ---- GLOBAL VARIABLES ----
+    var currentVehicleId = null;
+
     // ---- PAGE NAVIGATION ----
     function showPage(name) {
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -852,6 +855,15 @@
       if (name === 'analysis') {
         setTimeout(fetchDatasetAndRender, 100);
       }
+    }
+
+    // ---- PREDICT FOR SPECIFIC VEHICLE ----
+    function predictForVehicle(vehicleId, vehicleType) {
+      currentVehicleId = vehicleId;
+      document.getElementById('Vehicle_Type').value = vehicleType;
+      showPage('predict');
+      // Scroll to top of prediction form
+      document.querySelector('.main-content').scrollTop = 0;
     }
 
     // ---- PREDICTION LOGIC ----
@@ -891,6 +903,12 @@
       document.getElementById('result-output').style.display = 'none';
 
       var formData = new FormData();
+      
+      // Add vehicle_id if available
+      if (currentVehicleId) {
+        formData.append('vehicle_id', currentVehicleId);
+      }
+      
       formData.append('Vehicle_Type', document.getElementById('Vehicle_Type').value);
       formData.append('Vehicle_Age', document.getElementById('Vehicle_Age').value);
       formData.append('Mileage', document.getElementById('Mileage').value);
@@ -943,6 +961,9 @@
 
         document.getElementById('result-loading').style.display = 'none';
         document.getElementById('result-output').style.display = 'block';
+        
+        // Refresh prediction history after successful prediction
+        setTimeout(loadHistory, 500);
       })
       .catch(error => {
         alert('❌ Error: ' + error.message);
@@ -1014,7 +1035,7 @@
                 '<div class="vehicle-info"><strong>Year:</strong> ' + v.year + '</div>' +
                 (v.vin ? '<div class="vehicle-info"><strong>VIN:</strong> ' + v.vin + '</div>' : '') +
                 '<div class="vehicle-actions">' +
-                  '<button onclick="showPage(\'predict\')">Predict Health</button>' +
+                  '<button onclick="predictForVehicle(' + v.id + ', \'' + v.type + '\')">Predict Health</button>' +
                   '<button onclick="deleteVehicle(' + v.id + ')">Delete</button>' +
                 '</div>' +
                 '</div>';
@@ -1029,6 +1050,12 @@
           document.getElementById('vehicles-list').innerHTML = html;
           document.getElementById('history-vehicle-filter').innerHTML = filterHtml;
           document.getElementById('anomaly-vehicle-filter').innerHTML = anomalyFilterHtml;
+          
+          // Auto-select first vehicle in history filter if available
+          if (data.vehicles && data.vehicles.length > 0) {
+            document.getElementById('history-vehicle-filter').value = data.vehicles[0].id;
+            loadHistory();
+          }
         })
         .catch(e => console.error('Error loading vehicles:', e));
     }
@@ -1044,6 +1071,18 @@
     // ---- HISTORY PAGE ----
     function loadHistory() {
       var vehicleId = document.getElementById('history-vehicle-filter').value;
+      
+      // If no vehicle selected, try to select the first available vehicle
+      if (!vehicleId) {
+        var filterSelect = document.getElementById('history-vehicle-filter');
+        if (filterSelect.options.length > 1) {
+          // Select first vehicle (index 1 to skip "All Vehicles" option)
+          vehicleId = filterSelect.options[1].value;
+          filterSelect.value = vehicleId;
+        }
+      }
+      
+      // Fallback to vehicle 1 if still no ID
       var endpoint = vehicleId ? ('/vehicle/' + vehicleId + '/history') : '/vehicle/1/history';
       
       fetch(endpoint)
@@ -1054,7 +1093,7 @@
           
           if (data.history && data.history.length > 0) {
             data.history.slice(0, 20).reverse().forEach(h => {
-              var date = new Date(h.timestamp).toLocaleDateString() + ' ' + new Date(h.timestamp).toLocaleTimeString();
+              var date = new Date(h.timestamp).toLocaleDateString();
               var status = h.predicted_km > 60000 ? '✓ Good' : h.predicted_km > 30000 ? '⚠ Service' : '🔴 Critical';
               var statusColor = h.predicted_km > 60000 ? '#00ff88' : h.predicted_km > 30000 ? '#ffc800' : '#ff5050';
               html += '<tr style="border-bottom: 1px solid rgba(0,198,255,0.1); hover: background rgba(0,198,255,0.05);">' +
