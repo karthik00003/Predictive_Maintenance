@@ -474,6 +474,607 @@
       .anomalies-grid { grid-template-columns: 1fr; }
     }
   </style>
+  <script>
+    // ---- GLOBAL VARIABLES ----
+    var currentVehicleId = null;
+
+    // ---- PAGE NAVIGATION ----
+    function showPage(name) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.menu a').forEach(a => a.classList.remove('active'));
+      document.getElementById('page-' + name).classList.add('active');
+      document.getElementById('nav-' + name).classList.add('active');
+      
+      if (name === 'analysis') {
+        setTimeout(fetchDatasetAndRender, 100);
+      }
+    }
+
+    // ---- PREDICT FOR SPECIFIC VEHICLE ----
+    function predictForVehicle(vehicleId, vehicleType) {
+      currentVehicleId = vehicleId;
+      document.getElementById('Vehicle_Type').value = vehicleType;
+      showPage('predict');
+      // Scroll to top of prediction form
+      document.querySelector('.main-content').scrollTop = 0;
+    }
+
+    // ---- PREDICTION LOGIC ----
+    function validatePredictionForm() {
+      var fields = {
+        'Vehicle_Type': 'Vehicle Type',
+        'Vehicle_Age': 'Vehicle Age',
+        'Mileage': 'Mileage',
+        'RPM': 'RPM',
+        'Engine_Temp': 'Engine Temperature',
+        'Oil_Pressure': 'Oil Pressure',
+        'Fuel_Consumption': 'Fuel Consumption',
+        'Battery_Voltage': 'Battery Voltage',
+        'Brake_Pressure': 'Brake Pressure',
+        'Tire_Pressure': 'Tire Pressure',
+        'Tire_Condition': 'Tire Condition',
+        'Vibration_Level': 'Vibration Level',
+        'Last_Service_Months': 'Last Service Months',
+        'Accident_History': 'Accident History'
+      };
+
+      for (var fieldId in fields) {
+        var value = document.getElementById(fieldId).value;
+        if (!value || value === '') {
+          alert('❌ Please fill in: ' + fields[fieldId]);
+          return false;
+        }
+      }
+      return true;
+    }
+
+    function runPrediction() {
+      if (!validatePredictionForm()) return;
+
+      document.getElementById('result-default').style.display = 'none';
+      document.getElementById('result-loading').style.display = 'block';
+      document.getElementById('result-output').style.display = 'none';
+
+      var formData = new FormData();
+      
+      // Add vehicle_id if available
+      if (currentVehicleId) {
+        formData.append('vehicle_id', currentVehicleId);
+      }
+      
+      formData.append('Vehicle_Type', document.getElementById('Vehicle_Type').value);
+      formData.append('Vehicle_Age', document.getElementById('Vehicle_Age').value);
+      formData.append('Mileage', document.getElementById('Mileage').value);
+      formData.append('Engine_Temp', document.getElementById('Engine_Temp').value);
+      formData.append('RPM', document.getElementById('RPM').value);
+      formData.append('Oil_Pressure', document.getElementById('Oil_Pressure').value);
+      formData.append('Fuel_Consumption', document.getElementById('Fuel_Consumption').value);
+      formData.append('Battery_Voltage', document.getElementById('Battery_Voltage').value);
+      formData.append('Brake_Pressure', document.getElementById('Brake_Pressure').value);
+      formData.append('Tire_Pressure', document.getElementById('Tire_Pressure').value);
+      formData.append('Tire_Condition', document.getElementById('Tire_Condition').value);
+      formData.append('Vibration_Level', document.getElementById('Vibration_Level').value);
+      formData.append('Last_Service_Months', document.getElementById('Last_Service_Months').value);
+      formData.append('Accident_History', document.getElementById('Accident_History').value);
+
+      fetch('/predict', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          alert('❌ Prediction Error: ' + data.error);
+          document.getElementById('result-loading').style.display = 'none';
+          document.getElementById('result-default').style.display = 'block';
+          return;
+        }
+
+        var exact = data.exact_pred || 50000;
+        var margin = Math.round(exact * 0.10);
+        var low = Math.max(0, exact - margin);
+        var high = exact + margin;
+
+        document.getElementById('out-range-low').textContent = low.toLocaleString();
+        document.getElementById('out-range-high').textContent = high.toLocaleString();
+        document.getElementById('out-exact').textContent = exact.toLocaleString();
+
+        var badge = document.getElementById('out-badge');
+        badge.className = 'result-badge';
+        if (exact > 60000) {
+          badge.classList.add('badge-good');
+          badge.textContent = '✓ Vehicle in Good Health';
+        } else if (exact > 30000) {
+          badge.classList.add('badge-warning');
+          badge.textContent = '⚠ Service Recommended Soon';
+        } else {
+          badge.classList.add('badge-critical');
+          badge.textContent = '🔴 Immediate Attention Needed';
+        }
+
+        document.getElementById('result-loading').style.display = 'none';
+        document.getElementById('result-output').style.display = 'block';
+        
+        // Refresh prediction history after successful prediction
+        setTimeout(loadHistory, 500);
+      })
+      .catch(error => {
+        alert('❌ Error: ' + error.message);
+        document.getElementById('result-loading').style.display = 'none';
+        document.getElementById('result-default').style.display = 'block';
+      });
+    }
+
+    // ---- VEHICLE MANAGEMENT ----
+    function toggleAddVehicleForm() {
+      var form = document.getElementById('add-vehicle-form');
+      form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function addVehicle() {
+      var type = document.getElementById('new-vehicle-type').value;
+      var make = document.getElementById('new-vehicle-make').value;
+      var model = document.getElementById('new-vehicle-model').value;
+      var year = document.getElementById('new-vehicle-year').value;
+      var vin = document.getElementById('new-vehicle-vin').value;
+
+      if (!type || !make || !model || !year) {
+        alert('Please fill in all required fields');
+        return;
+      }
+
+      fetch('/vehicles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, make, model, year, vin })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          document.getElementById('new-vehicle-type').value = '';
+          document.getElementById('new-vehicle-make').value = '';
+          document.getElementById('new-vehicle-model').value = '';
+          document.getElementById('new-vehicle-year').value = '';
+          document.getElementById('new-vehicle-vin').value = '';
+          toggleAddVehicleForm();
+          loadVehicles();
+        } else {
+          alert('Error adding vehicle: ' + (data.message || 'Unknown error'));
+        }
+      })
+      .catch(e => alert('Error: ' + e.message));
+    }
+
+    function loadVehicles() {
+      fetch('/vehicles')
+        .then(r => r.json())
+        .then(data => {
+          var html = '';
+          var filterHtml = '<option value="">All Vehicles</option>';
+          var anomalyFilterHtml = '<option value="">All Vehicles</option>';
+          
+          if (data.vehicles && data.vehicles.length > 0) {
+            data.vehicles.forEach(v => {
+              var status = v.health_status || 'unknown';
+              
+              html += '<div class="vehicle-card">' +
+                '<div class="vehicle-header">' +
+                  '<span class="vehicle-title">' + v.type + '</span>' +
+                '</div>' +
+                '<div class="vehicle-info"><strong>Make:</strong> ' + v.make + '</div>' +
+                '<div class="vehicle-info"><strong>Model:</strong> ' + v.model + '</div>' +
+                '<div class="vehicle-info"><strong>Year:</strong> ' + v.year + '</div>' +
+                (v.vin ? '<div class="vehicle-info"><strong>VIN:</strong> ' + v.vin + '</div>' : '') +
+                '<div class="vehicle-actions">' +
+                  '<button onclick="predictForVehicle(' + v.id + ', \'' + v.type + '\')">Predict Health</button>' +
+                  '<button onclick="deleteVehicle(' + v.id + ')">Delete</button>' +
+                '</div>' +
+                '</div>';
+              
+              filterHtml += '<option value="' + v.id + '">' + v.type + ' - ' + v.year + ' ' + v.make + '</option>';
+              anomalyFilterHtml += '<option value="' + v.id + '">' + v.type + ' - ' + v.year + ' ' + v.make + '</option>';
+            });
+          } else {
+            html = '<p style="text-align:center;color:#999;grid-column:1/-1;">No vehicles registered yet. Add one to get started!</p>';
+          }
+          
+          document.getElementById('vehicles-list').innerHTML = html;
+          document.getElementById('history-vehicle-filter').innerHTML = filterHtml;
+          document.getElementById('anomaly-vehicle-filter').innerHTML = anomalyFilterHtml;
+          
+          // Auto-select first vehicle in history filter if available
+          if (data.vehicles && data.vehicles.length > 0) {
+            document.getElementById('history-vehicle-filter').value = data.vehicles[0].id;
+            loadHistory();
+          }
+        })
+        .catch(e => console.error('Error loading vehicles:', e));
+    }
+
+    function deleteVehicle(id) {
+      if (!confirm('Delete this vehicle?')) return;
+      fetch('/vehicles/' + id, { method: 'DELETE' })
+        .then(r => r.json())
+        .then(data => { if (data.success) loadVehicles(); })
+        .catch(e => alert('Error: ' + e.message));
+    }
+
+    // ---- HISTORY PAGE ----
+    function loadHistory() {
+      var vehicleId = document.getElementById('history-vehicle-filter').value;
+      
+      // If no vehicle selected, try to select the first available vehicle
+      if (!vehicleId) {
+        var filterSelect = document.getElementById('history-vehicle-filter');
+        if (filterSelect.options.length > 1) {
+          // Select first vehicle (index 1 to skip "All Vehicles" option)
+          vehicleId = filterSelect.options[1].value;
+          filterSelect.value = vehicleId;
+        }
+      }
+      
+      // Fallback to vehicle 1 if still no ID
+      var endpoint = vehicleId ? ('/vehicle/' + vehicleId + '/history') : '/vehicle/1/history';
+      
+      fetch(endpoint)
+        .then(r => r.json())
+        .then(data => {
+          var tbody = document.getElementById('history-tbody');
+          var html = '';
+          
+          if (data.history && data.history.length > 0) {
+            data.history.slice(0, 20).reverse().forEach(h => {
+              var date = new Date(h.timestamp).toLocaleDateString();
+              var status = h.predicted_km > 60000 ? '✓ Good' : h.predicted_km > 30000 ? '⚠ Service' : '🔴 Critical';
+              var statusColor = h.predicted_km > 60000 ? '#00ff88' : h.predicted_km > 30000 ? '#ffc800' : '#ff5050';
+              html += '<tr style="border-bottom: 1px solid rgba(0,198,255,0.1); hover: background rgba(0,198,255,0.05);">' +
+                '<td style="padding:12px; color: #ccc;">' + date + '</td>' +
+                '<td style="padding:12px; color: #ccc;">Vehicle ' + h.vehicle_id + '</td>' +
+                '<td style="padding:12px;"><strong style="color: #00c6ff;">' + h.predicted_km.toLocaleString() + ' km</strong></td>' +
+                '<td style="padding:12px; color:' + statusColor + '; font-weight: 600;">' + status + '</td>' +
+                '</tr>';
+            });
+          } else {
+            html = '<tr><td colspan="4" style="padding:20px;text-align:center;color:#999;">No prediction history yet.</td></tr>';
+          }
+          
+          tbody.innerHTML = html;
+          drawHistoryChart(data.history || []);
+        })
+        .catch(e => console.error('Error loading history:', e));
+    }
+
+    function drawHistoryChart(history) {
+      var canvas = document.getElementById('historyChart');
+      if (!canvas || history.length === 0) {
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#666';
+        ctx.font = '14px Poppins';
+        ctx.textAlign = 'center';
+        ctx.fillText('No data to display', canvas.width / 2, canvas.height / 2);
+        return;
+      }
+
+      var ctx = canvas.getContext('2d');
+      
+      // Get dimensions
+      var rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+
+      // Get last 10 predictions, reverse to chronological order
+      var data = history.slice(-10).reverse();
+      var values = data.map(h => h.predicted_km || 50000);
+      var labels = data.map(h => {
+        var date = new Date(h.timestamp);
+        return (date.getMonth() + 1) + '/' + date.getDate();
+      });
+
+      // Chart dimensions
+      var padding = 60;
+      var chartWidth = canvas.width - padding * 2;
+      var chartHeight = canvas.height - padding * 2;
+      var startX = padding;
+      var startY = padding;
+
+      // Calculate scale
+      var minValue = Math.min(...values);
+      var maxValue = Math.max(...values);
+      var range = maxValue - minValue;
+      if (range === 0) range = 10000; // If all values same, add buffer
+      var yScale = chartHeight / (range * 1.1);
+      var yMin = minValue - (range * 0.05);
+      var xStep = chartWidth / (data.length - 1 || 1);
+
+      // Background
+      ctx.fillStyle = 'rgba(0, 198, 255, 0.02)';
+      ctx.fillRect(startX, startY, chartWidth, chartHeight);
+      
+      // Draw grid lines
+      ctx.strokeStyle = 'rgba(0, 198, 255, 0.1)';
+      ctx.lineWidth = 1;
+      
+      // Horizontal grid lines and Y-axis labels
+      for (var i = 0; i <= 5; i++) {
+        var y = startY + (chartHeight / 5) * i;
+        ctx.beginPath();
+        ctx.moveTo(startX, y);
+        ctx.lineTo(startX + chartWidth, y);
+        ctx.stroke();
+        
+        var value = Math.round(maxValue - (range * 1.1 / 5) * i);
+        ctx.fillStyle = '#888';
+        ctx.font = 'bold 11px Poppins';
+        ctx.textAlign = 'right';
+        ctx.fillText(value.toLocaleString(), startX - 10, y + 4);
+      }
+
+      // Draw axes
+      ctx.strokeStyle = 'rgba(0, 198, 255, 0.4)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(startX, startY + chartHeight);
+      ctx.lineTo(startX + chartWidth, startY + chartHeight);
+      ctx.stroke();
+
+      // Draw data points and line
+      ctx.strokeStyle = 'rgba(0, 198, 255, 0.8)';
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      
+      var points = [];
+      var colors = [];
+      
+      for (var i = 0; i < data.length; i++) {
+        var x = startX + (i * xStep);
+        var y = startY + chartHeight - ((values[i] - yMin) * yScale);
+        points.push({x: x, y: y, value: values[i]});
+        
+        // Determine color based on health
+        if (values[i] > 60000) {
+          colors.push('#00ff88');
+        } else if (values[i] > 30000) {
+          colors.push('#ffc800');
+        } else {
+          colors.push('#ff5050');
+        }
+      }
+
+      // Draw line connecting points
+      if (points.length > 1) {
+        ctx.strokeStyle = 'rgba(0, 198, 255, 0.6)';
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for (var i = 1; i < points.length; i++) {
+          ctx.lineTo(points[i].x, points[i].y);
+        }
+        ctx.stroke();
+      }
+
+      // Draw points
+      for (var i = 0; i < points.length; i++) {
+        var p = points[i];
+        var color = colors[i];
+        
+        // Point shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y + 2, 6, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Point circle
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Point border
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // X-axis labels (dates)
+      ctx.fillStyle = '#888';
+      ctx.font = 'bold 11px Poppins';
+      ctx.textAlign = 'center';
+      for (var i = 0; i < labels.length; i++) {
+        var x = startX + (i * xStep);
+        var y = startY + chartHeight + 25;
+        ctx.fillText(labels[i], x, y);
+      }
+
+      // Axis labels
+      ctx.fillStyle = '#aaa';
+      ctx.font = 'bold 12px Poppins';
+      ctx.textAlign = 'center';
+      ctx.save();
+      ctx.translate(15, startY + chartHeight / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText('Remaining KM', 0, 0);
+      ctx.restore();
+
+      ctx.textAlign = 'center';
+      ctx.fillText('Days', startX + chartWidth / 2, canvas.height - 5);
+    }
+
+    // ---- ANALYSIS PAGE CHARTS ----
+    function initAnalysisCharts() {
+      fetchDatasetAndRender();
+    }
+
+    function fetchDatasetAndRender() {
+      fetch('/static/final_vehicle_dataset.csv')
+        .then(r => r.text())
+        .then(csv => {
+          var data = parseCSV(csv);
+          drawVehicleTypeChart(data);
+          drawHealthScoreChart(data);
+          drawMileageHealthChart(data);
+          drawMetricsByTypeChart(data);
+          drawFeatureUsageChart();
+        })
+        .catch(e => console.log('Charts will use sample data:', e));
+    }
+
+    function parseCSV(csv) {
+      var lines = csv.trim().split('\n');
+      var headers = lines[0].split(',').map(h => h.trim());
+      var data = [];
+      for (var i = 1; i < Math.min(lines.length, 101); i++) {
+        var obj = {};
+        var values = lines[i].split(',');
+        headers.forEach((h, idx) => obj[h] = values[idx] ? values[idx].trim() : '');
+        data.push(obj);
+      }
+      return data;
+    }
+
+    function drawVehicleTypeChart(data) {
+      var counts = {};
+      var colors = { 'SUV': '#00ff88', 'Sedan': '#00c6ff', 'Truck': '#ffc800', 'Hatchback': '#ff6b9d' };
+      data.forEach(d => {
+        counts[d.Vehicle_Type] = (counts[d.Vehicle_Type] || 0) + 1;
+      });
+      
+      var ctx = document.getElementById('chartVehicleType').getContext('2d');
+      var canvas = ctx.canvas;
+      var centerX = canvas.width / 2, centerY = canvas.height / 2, radius = 80;
+      var total = Object.values(counts).reduce((a, b) => a + b, 0);
+      var startAngle = 0;
+      var legend = '';
+
+      Object.keys(counts).forEach(type => {
+        var sliceAngle = (counts[type] / total) * 2 * Math.PI;
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, startAngle, startAngle + sliceAngle);
+        ctx.closePath();
+        ctx.fillStyle = colors[type] || '#00c6ff';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        startAngle += sliceAngle;
+        legend += '<div class="legend-item"><div class="legend-color" style="background:' + (colors[type] || '#00c6ff') + '"></div>' + type + ' (' + counts[type] + ')</div>';
+      });
+      document.getElementById('vehicleTypeLegend').innerHTML = legend;
+    }
+
+    function drawHealthScoreChart(data) {
+      var scores = data.map(d => parseFloat(d.Health_Score)).filter(s => s);
+      var bins = {}, binSize = 10;
+      scores.forEach(s => {
+        var bin = Math.floor(s / binSize) * binSize;
+        bins[bin] = (bins[bin] || 0) + 1;
+      });
+
+      var ctx = document.getElementById('chartHealthScore').getContext('2d');
+      var sorted = Object.keys(bins).sort((a, b) => a - b);
+      var maxCount = Math.max(...Object.values(bins));
+      var startX = 30, chartWidth = ctx.canvas.width - 60, chartHeight = ctx.canvas.height - 60;
+
+      ctx.fillStyle = '#444';
+      ctx.fillRect(startX, chartHeight, chartWidth, 1);
+      ctx.fillRect(startX, 20, 1, chartHeight - 20);
+
+      sorted.forEach((bin, idx) => {
+        var x = startX + (idx * chartWidth / sorted.length);
+        var barHeight = (bins[bin] / maxCount) * (chartHeight - 40);
+        var hue = (bin / 100) * 120;
+        ctx.fillStyle = 'hsl(' + hue + ', 100%, 50%)';
+        ctx.fillRect(x + 5, chartHeight - barHeight, chartWidth / sorted.length - 10, barHeight);
+      });
+
+      ctx.fillStyle = '#aaa';
+      ctx.font = 'bold 12px Poppins';
+      ctx.fillText('Health Score (0-100)', 10, ctx.canvas.height - 20);
+    }
+
+    function drawMileageHealthChart(data) {
+      var points = data.map(d => ({x: parseFloat(d.Mileage), y: parseFloat(d.Health_Score)})).filter(p => p.x && p.y);
+      var ctx = document.getElementById('chartMileageHealth').getContext('2d');
+      var startX = 30, startY = ctx.canvas.height - 30, chartWidth = ctx.canvas.width - 60, chartHeight = ctx.canvas.height - 60;
+      var maxMileage = Math.max(...points.map(p => p.x));
+      var maxHealth = 100;
+
+      ctx.fillStyle = '#444';
+      ctx.fillRect(startX, startY, chartWidth, 1);
+      ctx.fillRect(startX, startY - chartHeight, 1, chartHeight);
+
+      points.forEach(p => {
+        var px = startX + (p.x / maxMileage) * chartWidth;
+        var py = startY - (p.y / maxHealth) * chartHeight;
+        ctx.fillStyle = p.y > 60 ? '#00ff88' : p.y > 30 ? '#ffc800' : '#ff5050';
+        ctx.beginPath();
+        ctx.arc(px, py, 4, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      ctx.fillStyle = '#999';
+      ctx.font = '10px Poppins';
+      ctx.textAlign = 'center';
+      ctx.fillText('Mileage', startX + chartWidth / 2, ctx.canvas.height - 5);
+      ctx.textAlign = 'left';
+      ctx.fillText('Health Score', 10, startY - chartHeight / 2);
+    }
+
+    function drawMetricsByTypeChart(data) {
+      var typeMetrics = {};
+      data.forEach(d => {
+        if (!typeMetrics[d.Vehicle_Type]) typeMetrics[d.Vehicle_Type] = { temp: [], fuel: [] };
+        typeMetrics[d.Vehicle_Type].temp.push(parseFloat(d.Engine_Temp));
+        typeMetrics[d.Vehicle_Type].fuel.push(parseFloat(d.Fuel_Consumption));
+      });
+
+      var types = Object.keys(typeMetrics);
+      var ctx = document.getElementById('chartMetricsByType').getContext('2d');
+      var startX = 40, barWidth = (ctx.canvas.width - 80) / (types.length * 2), chartHeight = ctx.canvas.height - 60;
+      var maxTemp = 110, maxFuel = 16;
+
+      types.forEach((type, idx) => {
+        var avgTemp = typeMetrics[type].temp.reduce((a, b) => a + b) / typeMetrics[type].temp.length;
+        var avgFuel = typeMetrics[type].fuel.reduce((a, b) => a + b) / typeMetrics[type].fuel.length;
+
+        // Temperature bar
+        var tempHeight = (avgTemp / maxTemp) * (chartHeight - 40);
+        ctx.fillStyle = '#ff6b6b';
+        ctx.fillRect(startX + idx * barWidth * 2, chartHeight - tempHeight, barWidth - 5, tempHeight);
+
+        // Fuel bar
+        var fuelHeight = (avgFuel / maxFuel) * (chartHeight - 40);
+        ctx.fillStyle = '#ffc800';
+        ctx.fillRect(startX + idx * barWidth * 2 + barWidth, chartHeight - fuelHeight, barWidth - 5, fuelHeight);
+
+        ctx.fillStyle = '#999';
+        ctx.font = '9px Poppins';
+        ctx.textAlign = 'center';
+        ctx.fillText(type, startX + idx * barWidth * 2 + barWidth, ctx.canvas.height - 10);
+      });
+    }
+
+    function drawFeatureUsageChart() {
+      // Placeholder for feature usage chart - not used in current layout
+    }
+
+    // ---- PAGE INITIALIZATION ----
+    function initPages() {
+      loadVehicles();
+      loadHistory();
+      initAnalysisCharts();
+    }
+
+    // Initialize on page load
+    window.addEventListener('load', initPages);
+
+    document.addEventListener('wheel', function() {
+      if (document.activeElement.type === 'number') document.activeElement.blur();
+    });
+  </script>
 </head>
 
 <body>
